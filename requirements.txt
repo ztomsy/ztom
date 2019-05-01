@@ -1,0 +1,11 @@
+pytz
+pymongo
+influxdb
+ccxt
+jsonpickle
+influxdb
+typing
+aiohttp
+numpy
+sqlalchemy
+psycopg2-binary

@@ -1,0 +1,240 @@
+{
+    "create": {
+        "side": "buy",
+        "lastTradeTimestamp": null,
+        "remaining": null,
+        "cost": 0.049999999999999996,
+        "timestamp": 1529947000139,
+        "type": "limit",
+        "symbol": "ETH/BTC",
+        "id": "5b3123789dda157b36df4a1d",
+        "amount": 0.6773607955034138,
+        "trades": null,
+        "datetime": "2018-06-25T17:16:40.139Z",
+        "status": "open",
+        "price": 0.07381590480571001,
+        "info": {
+            "data": {
+                "orderOid": "5b3123789dda157b36df4a1d"
+            },
+            "msg": "OK",
+            "timestamp": 1529947000139,
+            "success": true,
+            "code": "OK"
+        },
+        "fee": null,
+        "filled": null
+    },
+    "updates": [
+        {
+            "side": "buy",
+            "lastTradeTimestamp": null,
+            "remaining": 0.6773607,
+            "cost": 0.049999989695130004,
+            "timestamp": 1529947001000,
+            "type": "limit",
+            "symbol": "ETH/BTC",
+            "id": "5b3123789dda157b36df4a1d",
+            "amount": 0.6773607,
+            "trades": [],
+            "datetime": "2018-06-25T17:16:41.000Z",
+            "status": "open",
+            "price": 0.0738159,
+            "info": {
+                "type": "BUY",
+                "userOid": "5b2137bfcbdbf716873b3b85",
+                "coinType": "ETH",
+                "pendingAmount": 0.6773607,
+                "dealPriceAverage": 0.0,
+                "dealValueTotal": 0.0,
+                "orderOid": "5b3123789dda157b36df4a1d",
+                "orderPrice": 0.0738159,
+                "coinTypePair": "BTC",
+                "dealAmount": 0.0,
+                "feeTotal": 0.0,
+                "dealOrders": {
+                    "limit": 20,
+                    "total": 0,
+                    "currPageNo": 1,
+                    "datas": [],
+                    "lastPage": false,
+                    "firstPage": true,
+                    "pageNos": 1
+                },
+                "createdAt": 1529947001000
+            },
+            "fee": {
+                "currency": "ETH",
+                "cost": 0.0,
+                "rate": null
+            },
+            "filled": 0.0
+        },
+        {
+            "side": "buy",
+            "lastTradeTimestamp": null,
+            "remaining": 0.6773607,
+            "cost": 0.049999989695130004,
+            "timestamp": 1529947001000,
+            "type": "limit",
+            "symbol": "ETH/BTC",
+            "id": "5b3123789dda157b36df4a1d",
+            "amount": 0.6773607,
+            "trades": [],
+            "datetime": "2018-06-25T17:16:41.000Z",
+            "status": "open",
+            "price": 0.0738159,
+            "info": {
+                "type": "BUY",
+                "userOid": "5b2137bfcbdbf716873b3b85",
+                "coinType": "ETH",
+                "pendingAmount": 0.6773607,
+                "dealPriceAverage": 0.0,
+                "dealValueTotal": 0.0,
+                "orderOid": "5b3123789dda157b36df4a1d",
+                "orderPrice": 0.0738159,
+                "coinTypePair": "BTC",
+                "dealAmount": 0.0,
+                "feeTotal": 0.0,
+                "dealOrders": {
+                    "limit": 20,
+                    "total": 0,
+                    "currPageNo": 1,
+                    "datas": [],
+                    "lastPage": false,
+                    "firstPage": true,
+                    "pageNos": 1
+                },
+                "createdAt": 1529947001000
+            },
+            "fee": {
+                "currency": "ETH",
+                "cost": 0.0,
+                "rate": null
+            },
+            "filled": 0.0
+        },
+        {
+            "side": "buy",
+            "lastTradeTimestamp": null,
+            "remaining": 0.6773607,
+            "cost": 0.049999989695130004,
+            "timestamp": 1529947001000,
+            "type": "limit",
+            "symbol": "ETH/BTC",
+            "id": "5b3123789dda157b36df4a1d",
+            "amount": 0.6773607,
+            "trades": [],
+            "datetime": "2018-06-25T17:16:41.000Z",
+            "status": "open",
+            "price": 0.0738159,
+            "info": {
+                "type": "BUY",
+                "userOid": "5b2137bfcbdbf716873b3b85",
+                "coinType": "ETH",
+                "pendingAmount": 0.6773607,
+                "dealPriceAverage": 0.0,
+                "dealValueTotal": 0.0,
+                "orderOid": "5b3123789dda157b36df4a1d",
+                "orderPrice": 0.0738159,
+                "coinTypePair": "BTC",
+                "dealAmount": 0.0,
+                "feeTotal": 0.0,
+                "dealOrders": {
+                    "limit": 20,
+                    "total": 0,
+                    "currPageNo": 1,
+                    "datas": [],
+                    "lastPage": false,
+                    "firstPage": true,
+                    "pageNos": 1
+                },
+                "createdAt": 1529947001000
+            },
+            "fee": {
+                "currency": "ETH",
+                "cost": 0.0,
+                "rate": null
+            },
+            "filled": 0.0
+        },
+        {
+            "side": "buy",
+            "lastTradeTimestamp": null,
+            "remaining": 0.0,
+            "cost": 0.04995144,
+            "timestamp": 1529947001000,
+            "type": "limit",
+            "symbol": "ETH/BTC",
+            "id": "5b3123789dda157b36df4a1d",
+            "amount": 0.6773607,
+            "trades": [
+                {
+                    "side": "buy",
+                    "type": null,
+                    "cost": 0.04995144,
+                    "timestamp": 1529947001000,
+                    "symbol": "ETH/BTC",
+                    "id": null,
+                    "amount": 0.6773607,
+                    "info": {
+                        "dealValue": 0.04995144,
+                        "amount": 0.6773607,
+                        "dealPrice": 0.07374422,
+                        "feeRate": 0.001,
+                        "fee": 0.00067736,
+                        "createdAt": 1529947001000
+                    },
+                    "order": "5b3123789dda157b36df4a1d",
+                    "datetime": "2018-06-25T17:16:41.000Z",
+                    "price": 0.07374422,
+                    "fee": {
+                        "currency": "ETH",
+                        "cost": 0.00067736
+                    }
+                }
+            ],
+            "datetime": "2018-06-25T17:16:41.000Z",
+            "status": "closed",
+            "price": 0.07374423,
+            "info": {
+                "type": "BUY",
+                "userOid": "5b2137bfcbdbf716873b3b85",
+                "coinType": "ETH",
+                "pendingAmount": 0.0,
+                "dealPriceAverage": 0.07374423,
+                "dealValueTotal": 0.04995144,
+                "orderOid": "5b3123789dda157b36df4a1d",
+                "orderPrice": 0.0738159,
+                "coinTypePair": "BTC",
+                "dealAmount": 0.6773607,
+                "feeTotal": 0.00067736,
+                "dealOrders": {
+                    "limit": 20,
+                    "total": 1,
+                    "currPageNo": 1,
+                    "datas": [
+                        {
+                            "dealValue": 0.04995144,
+                            "amount": 0.6773607,
+                            "dealPrice": 0.07374422,
+                            "feeRate": 0.001,
+                            "fee": 0.00067736,
+                            "createdAt": 1529947001000
+                        }
+                    ],
+                    "lastPage": false,
+                    "firstPage": true,
+                    "pageNos": 1
+                },
+                "createdAt": 1529947001000
+            },
+            "fee": {
+                "currency": "ETH",
+                "cost": 0.00067736,
+                "rate": null
+            },
+            "filled": 0.6773607
+        }
+    ]
+}

@@ -1,0 +1,76 @@
+{"trades": [
+                {
+                    "timestamp": 1529946468000,
+                    "datetime": "2018-06-25T17:07:48.000Z",
+                    "symbol": "ETH/BTC",
+                    "amount": 0.329182,
+                    "info": {
+                        "dealValue": 0.02426129,
+                        "createdAt": 1529946468000,
+                        "dealPrice": 0.07370175,
+                        "fee": 2.426e-05,
+                        "amount": 0.329182,
+                        "feeRate": 0.001
+                    },
+                    "fee": {
+                        "currency": "ETH",
+                        "cost": 2.426e-05
+                    },
+                    "id": null,
+                    "side": "sell",
+                    "price": 0.07370175,
+                    "order": "5b3121639dda157dea6ad903",
+                    "cost": 0.02426129,
+                    "type": null
+                },
+                {
+                    "timestamp": 1529946468000,
+                    "datetime": "2018-06-25T17:07:48.000Z",
+                    "symbol": "ETH/BTC",
+                    "amount": 0.17,
+                    "info": {
+                        "dealValue": 0.0125293,
+                        "createdAt": 1529946468000,
+                        "dealPrice": 0.07370176,
+                        "fee": 1.253e-05,
+                        "amount": 0.17,
+                        "feeRate": 0.001
+                    },
+                    "fee": {
+                        "currency": "ETH",
+                        "cost": 1.253e-05
+                    },
+                    "id": null,
+                    "side": "sell",
+                    "price": 0.07370176,
+                    "order": "5b3121639dda157dea6ad903",
+                    "cost": 0.0125293,
+                    "type": null
+                },
+                {
+                    "timestamp": 1529946468000,
+                    "datetime": "2018-06-25T17:07:48.000Z",
+                    "symbol": "ETH/BTC",
+                    "amount": 0.000818,
+                    "info": {
+                        "dealValue": 6.029e-05,
+                        "createdAt": 1529946468000,
+                        "dealPrice": 0.07370176,
+                        "fee": 6e-08,
+                        "amount": 0.000818,
+                        "feeRate": 0.001
+                    },
+                    "fee": {
+                        "currency": "ETH",
+                        "cost": 6e-08
+                    },
+                    "id": null,
+                    "side": "sell",
+                    "price": 0.07370176,
+                    "order": "5b3121639dda157dea6ad903",
+                    "cost": 6.029e-05,
+                    "type": null
+                }
+            ]
+
+}
