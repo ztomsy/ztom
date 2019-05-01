@@ -2,7 +2,7 @@
 
 ZTOM is the Python SDK for implementing the Trade Order Management System for crypto exchanges.
 
-It's build upon the [CCXT ](https://github.com/ccxt/ccxt)library and simplifies the development of fail-safe applications and trading algorithms by providing tools for managing the trade orders execution and control.
+It's build upon the [CCXT ](https://github.com/ccxt/ccxt)library and simplifies the development of fail-safe applications and trading algorithms by providing tools for managing the trade orders execution and some supplementary tools for configuration, flow control, reporting and etc.
 
 With ZTOM it's possible to create, maintain and cancel trade orders using different triggers and conditions apart from the implementation of exchange's communication API. 
 
@@ -12,7 +12,7 @@ Could be used for Algorithmic (algo) and High Frequency Trading (hft) for protot
 
 **Main Features:**
 
-* Customizable exchange REST API wrapper
+* Customizable exchanges REST API wrapper
 * Request throttling control
 * Order Book depth calculation
 * Order's Management
@@ -25,9 +25,21 @@ Could be used for Algorithmic (algo) and High Frequency Trading (hft) for protot
 
 
 
+# Why it was created
+
+ZTOM was created because of 2 main reasons:
+
+First one is to fail-safe proceeding with the common exchange API use cases like working with orders,  exceptions handling so it could be possible to focus on trading algorithms rather than overcoming all the tech things.   
+
+This allows to create simple and clean "syntax" framework for order management and flow control so it could be possible easily read the code and understand the implemented algorithm as good as increase the speed of development and leverage on rich Python's analytical abilities. 
+
+The second big thing in mind was the implementation of the offline mode for both market data gathering and order execution using the same code as for online trading.  This allows more quickly develop the algos, emulate different cases and as a result launch actual live tests more quickly.  
+
+
+
 # Code Example
 
-So, the order management could be easy like this: 
+The order management could be something like this: 
 
 ```python
 import time
@@ -100,35 +112,37 @@ Binance
 
 | **Components**                             | **Features**                                                 |
 | ------------------------------------------ | ------------------------------------------------------------ |
-| **Main**                                   | **most used for creation apps and algos**                    |
+| **Core**                                   | **most used for creation apps and algos**                    |
 | `ccxtExchangeWrapper`                      | communication to exchange via the ccxt offline exchange connection emulation |
 | `action_order`                             | action order base class. allows to implement "smart" orders which could perform some actions (creation and cancellation of  basic orders) in dependence from the data provided by order manager |
 | `order_manager`                            | action orders lifecycle managementsafe communications with echange wrapperdata provision for ActionOrders |
 | `bot`                                      | configuration, logging, reporting and workflow  management   |
 | `throttle`                                 | requests throttle contoll                                    |
+| `trade_orders`                             | container of basic trade order data                          |
 |                                            |                                                              |
 | **Action Orders**                          | various types of action orders                               |
 | `fok_orders`                               | fill-or-kill order implementation (with some amount of time or on price changing) |
 | `recovery_orders`                          | stop loss taker order implementation                         |
-| `maker_stop_loss (will be added soon)`     | maker stop loss order                                        |
+| `maker_stop_loss` (will be added soon)     | maker stop loss order                                        |
 |                                            |                                                              |
 | **Calculation helpers**                    | Prices, amounts and other helpers for calculations           |
 | `core`                                     | essential assets operations (without connections):trade symbol detectionorder  side detectionrelative price differenceprecision convertion |
 | `orderbook`                                | orderbooks in-depth amounts and prices calculations          |
 |                                            |                                                              |
-| **Tech**                                   |                                                              |
+| **Tech/Supplementary**                     |                                                              |
 | `utils`                                    | various general purpose supplementary functions              |
 | `datastorage`                              | csv file management                                          |
-| `cli`                                      | commmand line tools                                          |
+| `cli`                                      | command line tools                                           |
 | `timer`                                    | operations time counter and reporter                         |
 | `errors`                                   | some custom exceptions                                       |
-| `trade_orders`                             | container of basic trade order data                          |
 |                                            |                                                              |
 | **Reporing**                               |                                                              |
 | `reporter`                                 | influxdb  client wrapper for db connection management        |
 | `reporter_sqla`                            | sqlalchemy wrapper for db connection management              |
-| `data models`                              | sqlalecmy tables classes to represent trade orders and deals |
+| `data models`                              | sqlalchemy tables  to represent trade orders and deals       |
 | `grafana dashboards`  (will be added soon) | samples of grafana dashboards                                |
+
+
 
 
 
