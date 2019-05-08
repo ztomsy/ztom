@@ -1,14 +1,12 @@
 ActionOrder
-================================
-.. toctree::
-    :maxdepth: 2
-    :collapse: False
-
+===========
+from rst fgssdfgsd
 
 .. automodule:: ztom.ActionOrder
-   :members: 
+    :members:
 
 .. autoclass:: ztom.ActionOrder
     :members:
+
 
 

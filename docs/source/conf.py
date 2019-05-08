@@ -61,9 +61,6 @@ source_suffix = ['.rst', '.md']
 
 # At the bottom of conf.py
 
-github_doc_root = 'hiyhub/'
-
-
 def setup(app):
     app.add_config_value('recommonmark_config', {
             # 'url_resolver': lambda url: github_doc_root + url,
