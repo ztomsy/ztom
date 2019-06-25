@@ -27,6 +27,40 @@ class ExchangeWrapperOfflineFetchError(ExchangeWrapperError):
 
 
 class ccxtExchangeWrapper:
+    """
+     Encapsulates the data and methods, provided by CCXT library, in order to unify the the order management
+     capabilities between various exhanges. Also this class provides offline mode for using predefined responses from
+     exchanges and throttling control.
+
+     This is done via using separate wrappers placed under exchange folder.
+
+     Attributes:
+         exchange_id: a string exchange id as in ccxt
+         requests_throttle: ztom.Throttle object for throttling control
+         offline: boolean to represent current working mode. False by default, means that wrapper is in online mode.
+         tickers: dict of last fatched tickers
+         markets: dict of last fetched markets
+         order_book_length: int for setting the degault depth for fetching order books
+         markets_json_file: string with the path to jason file with markets information used in offline mode
+         tickers_csv_file: string with the path to jason file with tickers in offline mode
+         PERIOD_SECONDS: float in seconds representing the period time used in Throttle management. Default is 60.
+         REQUESTS_PER_PERIOD: int of maximumum amount of requests during the period
+         REQUEST_TYPE_WIGHTS: dict which sets the weight (amount of "requests") for different exchange operations.
+          {"key": value} where "key" is the string representing the operation and "value" is the weight in requests.
+          Example:
+              REQUEST_TYPE_WIGHTS = {
+                "single": 1,
+                "load_markets": 1,
+                "fetch_tickers": 1,
+                "fetch_ticker": 1,
+                "fetch_order_book": 1,
+                "create_order": 1,
+                "fetch_order": 1,
+                "cancel_order": 1,
+                "fetch_my_trades": 1,
+                "fetch_balance": 1
+            }
+    """
     _ccxt = None  # type: ccxt.Exchange
     _async_ccxt = ...  # type accxt.Exchange
     _PRECISION_AMOUNT = 8  # default amount precision for offline mode
@@ -49,6 +83,22 @@ class ccxtExchangeWrapper:
 
     @classmethod
     def load_from_id(cls, exchange_id, api_key=None, secret=None, offline=False) -> EW:
+        """
+        Main constructor, which load the wrapper for passed exchange_id. If there is no wrapper for exchnage_id - the
+        generic wrapper will be loaded. Could be used without credentials if api_key is not provided.
+        Args:
+            exchange_id: a string exchange id as in ccxt
+            api_key: string with the api_key
+            secret: string with the secret
+            offline: bool which could be set to True if needed to use the wrapper in offline mode
+
+        Returns:
+            ccxtExchangeWrapper object. The ccxtExchangeWrapper._ccxt will contain the ccxt object of initialized
+             exchange.
+
+        Raises:
+            could raise standart ccxt exceptions
+        """
 
         try:
             exchange = getattr(exchanges, exchange_id)
@@ -58,6 +108,13 @@ class ccxtExchangeWrapper:
             return cls(exchange_id, api_key, secret, offline)
 
     def __init__(self, exchange_id, api_key="", secret="", offline=False):
+        """
+        Default constructor of wrapper. This will not load the wrapper, however will iniate the exchange and put it into
+         _ccxt attribute.
+
+        For Args see the load_from_id method.
+
+        """
 
         if hasattr(ccxt, exchange_id):
             exchange = getattr(ccxt, exchange_id)
@@ -106,6 +163,19 @@ class ccxtExchangeWrapper:
         self.tickers_csv_file = str
 
     def enable_requests_throttle(self, period=None, requests_per_period=None, request_type_weights=None):
+        """
+        Enables the requests counting anf throttling (creates the requests_throttle object). If not called or
+        self.requests_throttle is None the counting of requests counting will not occur.
+
+        If passed parameters will be not set, the default wrapper's parameters (PERIOD_SECONDS, REQUESTS_PER_PERIOD,
+           REQUEST_TYPE_WIGHTS) will be used.
+
+        For arguments definition bee the Throttle class reference.
+
+        Returns:
+            Nothing. Just set's the self.requests_throttle with the initiated Throttle object
+        """
+
         if period is None:
             period = self.PERIOD_SECONDS
 
@@ -117,25 +187,47 @@ class ccxtExchangeWrapper:
 
         self.requests_throttle = Throttle(period, requests_per_period, request_type_weights)
 
-    # generic method for loading markets could be redefined in custom exchange wrapper
     def _load_markets(self):
+        """
+            generic method for loading markets could be redefined in custom exchange wrapper
+
+            Returns:
+                dict of ccxt.load_markets()
+        """
         return self._ccxt.load_markets()
 
-    # generic method for loading ohlcv could be redefined in custom exchange wrapper
     def _fetch_ohlcv(self, symbol: str, timeframe, since=None, limit=None):
+        """
+            generic method for loading ohlcv could be redefined in custom exchange wrapper
+        """
         return self._ccxt.fetch_ohlcv(symbol, symbol, timeframe, since, limit, params={})
 
-    # generic method for fetching tickers could be redefined in custom exchange wrapper
     def _fetch_tickers(self, symbol=None):
+        """
+        generic method for fetching tickers could be redefined in custom exchange wrapper
+        """
         return self._ccxt.fetch_tickers(symbol)
 
-    # generic method for fetching order books could be redefined in custom exchange wrapper
     def _fetch_order_book(self, symbol: str, length=None, params=None):
+        """
+         generic method for fetching order books could be redefined in custom exchange wrapper
+        """
         if not params:
             params = dict()
         return self._ccxt.fetch_order_book(symbol, length, params)
 
     def fetch_order_book(self, symbol: str, length=None, params=None):
+        """
+        Fetches order books from exchange or from offline data (in offline mode). If the throttling is enabled,
+        the requests with the weight of "fetch_order_book" will be counted.
+        Args:
+            symbol: string with symbol in ccxt format (ex "ETH/BTC")
+            length: int of depth for requested order book if not set the self.order_book_length will be used
+            params:
+
+        Returns: list which contains order book in ccxt format
+
+        """
 
         result = None
         if self.requests_throttle is not None:
@@ -151,10 +243,12 @@ class ccxtExchangeWrapper:
 
     def load_markets(self):
         """
-        Loads the markets from the exchange or offline data. Should be called before fetching any tickers and creating,
-         proceeding orders.
+        Loads the active markets from the exchange or offline data. Should be called before fetching any tickers and
+        creating, proceeding orders.
 
-        :return: dict
+        If the throttling is enabled, the requests with the weight of "load_markets" will be counted.
+
+        Returns: dict
         """
 
         if self.requests_throttle is not None:
@@ -176,13 +270,18 @@ class ccxtExchangeWrapper:
 
     def fetch_tickers(self, symbol: str = None):
         """
-        fetching tickers from exchange or offline data. Same as ccxt's fetch_tickers(). If is offline mode - returns
-         data from the _offline_tickers list.
+         Fetches tickers or single ticker if the symbol of specifiled from exchange or offline data. Same as ccxt's
+          fetch_tickers(). If is offline mode - returns data from the _offline_tickers list.
 
         If markets were not previously loaded - invokes load_markets() method.
 
-        :param symbol: single symbol
-        :return: dict
+        If the throttling is enabled, the requests with the weight of "fetch_tickers" or "fetch_ticker" if symbol is
+         specified.
+
+        Args:
+         symbol: string with the single symbol. if ommitted all tickers will be returned
+        Returns:
+             dict{"[symbol]":ticker_data_duct}
         """
 
         if symbol is None:
@@ -214,6 +313,18 @@ class ccxtExchangeWrapper:
 
     # init offline fetching
     def set_offline_mode(self, markets_json_file: str, tickers_csv_file: str, orders_json_file: str = None):
+        """
+        Set the wrapper to work in offline mode. Should be called before any exchange requests.
+
+        Args:
+            markets_json_file: string with the path to jason file with markets information
+            tickers_csv_file: string with the path to jason file with tickers in offline mode
+            orders_json_file: depreciated
+
+        Returns:
+            sets the self.offline to true
+
+        """
 
         self.markets_json_file = markets_json_file
         self.tickers_csv_file = tickers_csv_file
@@ -230,6 +341,9 @@ class ccxtExchangeWrapper:
 
     @staticmethod
     def load_markets_from_json_file(markets_json_file):
+        """
+         Supplementary method.
+        """
 
         with open(markets_json_file) as json_file:
             json_data = json.load(json_file)
@@ -238,6 +352,9 @@ class ccxtExchangeWrapper:
 
     @staticmethod
     def load_tickers_from_csv(tickers_csv_file):
+        """
+         Supplementary method.
+        """
         tickers = dict()
 
         csv_float_fields = ["ask", "bid", "askVolume", "bidVolume"]
@@ -268,37 +385,44 @@ class ccxtExchangeWrapper:
         return json_data
 
     def set_offline_balance(self, balance: dict):
+        """
+         Sets the information for offline balance fetching.
+         Args:
+             balance: dict of balances as fetched in ccxt
+        """
         self._offline_balance = balance
 
     def load_offline_order_books_from_csv(self, file_name):
         """
         Loads the order books data which could be later available via fetch_order_books in offine mode (sets the
-        self._offline_order_books dict). Also returns the fetched data
+        self._offline_order_books dict). Also returns the fetched data.
 
-        :param file_name: name of csv file.
-        File format format:
-        fetch_id | symbol | ask | ask-qty | bid | bid-qty
+        Args:
+            file_name: name of csv file.
+                File format format:
+                fetch_id | symbol | ask | ask-qty | bid | bid-qty
 
-        where,
+                where,
 
-        "fetch_id"  is the id of fetch of the whole order book,  column could be any.
+                "fetch_id"  is the id of fetch of the whole order book,  column could be any.
 
-        example:
+                example:
 
-            fetch	symbol	ask	ask-qty	bid	bid-qty
-            0	ETH/BTC	0.092727	1.451	0.092698	0.3685058
-            0	ETH/BTC	0.092728	0.026	0.092697	23.058
-            ....
-            0	ETH/BTC	0.092774	1.815	0.092603	8.662
-            0	FUEL/BTC	0.0000131	2607.6335877863	0.00001287	2615
-            0	FUEL/BTC	0.00001311	2695	0.00001281	9828
-            ...
-            1	FUEL/BTC	0.00001343	216	0.00001263	8628
-            1	FUEL/BTC	0.00001346	2162	0.00001261	150
-            1   FUEL/ETH	0.00014092	2331	0.000138	2607
-            1 	FUEL/ETH	0.00014205	2460	0.00013722	21133
+                    fetch	symbol	ask	ask-qty	bid	bid-qty
+                    0	ETH/BTC	0.092727	1.451	0.092698	0.3685058
+                    0	ETH/BTC	0.092728	0.026	0.092697	23.058
+                    ....
+                    0	ETH/BTC	0.092774	1.815	0.092603	8.662
+                    0	FUEL/BTC	0.0000131	2607.6335877863	0.00001287	2615
+                    0	FUEL/BTC	0.00001311	2695	0.00001281	9828
+                    ...
+                    1	FUEL/BTC	0.00001343	216	0.00001263	8628
+                    1	FUEL/BTC	0.00001346	2162	0.00001261	150
+                    1   FUEL/ETH	0.00014092	2331	0.000138	2607
+                    1 	FUEL/ETH	0.00014205	2460	0.00013722	21133
 
-        :return: dict, containing data for offline order books
+        Returns:
+            dict, containing data for offline order books
         """
         order_books = dict()
         order_books_indexes = dict()  # key is the csv's first column val., value is the current index in order books
@@ -452,7 +576,30 @@ class ccxtExchangeWrapper:
         return self._ccxt.cancel_order(order.id)
 
     def place_limit_order(self, order: TradeOrder):
-        # returns the ccxt response on order placement
+        """
+        Sends the request to exchange to place limit order which parameters described in order object. Exchange responce
+         returned by this method could be used to update the TradeOrder object.
+
+         In offline mode the order responses are taken from the self._offline_orders_data.
+
+         Adds the  dict {"timestamp_open": timestamps_dict, "timestamp_closed": timestamps_dict }  with the
+         information on timestamps of opening and closing the order (if the order was closed on placement request).
+
+         Each "timestamps_dict" contains following fields:
+          - request_placed - timestamp when the request was sent
+          - request_received - timestamp when the request received from the exchange
+          - from_exchange - timestamp of order from the exchange
+
+         If throttling is enabled counts the weight of "create_order" request.
+
+        Args:
+            order: TradeOrder object with the order parameters
+
+        Returns:
+            dict with the exchange response which could be used for updating TradeOrder object
+
+        """
+
         timestamp_open = dict()
         timestamp_open["request_placed"] = datetime.datetime.now().timestamp()
 
@@ -506,6 +653,18 @@ class ccxtExchangeWrapper:
             return result
 
     def get_order_update(self, order: TradeOrder):
+        """
+        Returns the order's data requested from the exchange or from offline data (offline mode documentation for details).
+
+        If throttling is enabled counts the weight of "fetch_order" request.
+
+        Args:
+            order: TradeOrder object which should be requested from the exchange
+
+        Returns:
+            dict with the order data in ccxt format
+
+        """
 
         timestamp_closed = dict()
         timestamp_closed["request_placed"] = datetime.datetime.now().timestamp()
@@ -541,6 +700,19 @@ class ccxtExchangeWrapper:
             return result
 
     def cancel_order(self, order: TradeOrder):
+        """
+        Send the request to exchange to cancel the order and returns the exchange's responce. In offline mode response
+        is created from the self._offline_orders_data.
+
+        If throttling is enabled counts the weight of "cancel_order" request.
+
+        Args:
+            order: TradeOrder object
+
+        Returns:
+            dict with the exchange response which could be used for updating the TradeOrder
+
+        """
         if self.requests_throttle is not None:
             self.requests_throttle.add_request(request_type="cancel_order")
 
@@ -597,11 +769,24 @@ class ccxtExchangeWrapper:
 
     def get_trades(self, order: TradeOrder):
         """
-        get trades and checks if amount in trades equal to order's filled amount
-        :param order:
-        :return: dict of trades as in ccxt:
-            amount:
-            trades: list of trades
+        Returns  the trades of placed order and checks if amount in trades equal to order's filled amount.
+
+        Throttling: the requests with the weight of "fetch_my_trades" will be counted.
+
+        If the trades information contains in order's data - just extracts it from the order object (some exchanges
+        returns the trades within the order update information, for example kucoin). In this case the request is not
+        counted within the throttling control.
+
+        Args:
+            order: TradeOrder object for which the trades are being requested.
+
+        Returns:
+            dict of trades as in ccxt:
+
+        Raises:
+            ExchangeWrapperError if the amount calculated from trades not matches the filled order's amount or
+            filled amount is zero
+
         """
 
         if self.offline:
@@ -644,11 +829,14 @@ class ccxtExchangeWrapper:
     @staticmethod
     def fees_from_order_trades(order: TradeOrder):
         """
-        returns the dict fees as ["<CURRENCY>"]["amount"] from order's trades and order's fee field.
-        In order to extract fees from trades - Order should be updated with trades before calling this method
+        Returns the dict fees as ["<CURRENCY>"]["amount"] from order's trades and order's fee field.
+        In order to extract fees from trades - Order should be updated with trades before calling this method.
+        This method does not request the exchange!
 
-        :param order: TradeOrder
-        :return:  the dict of cumulative fee as ["<CURRENCY>"]["amount"]
+        Args:
+            order: TradeOrder
+        Returns:
+              the dict of cumulative for every currency  as {"<CURRENCY>": amount"}
         """
         total_fee = dict()
 
@@ -679,17 +867,23 @@ class ccxtExchangeWrapper:
 
     def get_trades_results(self, order: TradeOrder):
         """
-         fetch or (get from order) the trades within the order and return the result calculated by trades:
+        Fetches or gets from order (if available) the trades within the order and return the result amounts calculated
+        from trades:
         dict = {
           "trades": dict of trades from ccxt
           "filled" : filled amount of order (base currency)
           "cost": filled amount if quote currency
-          "price" : total order price
-          "dest_amount" : amount of received destination currency
-          "src_amount" :  amount of spent source currency
+          "price" : total (average) order filled price
+          "dest_amount" : amount of received destination currency of order
+          "src_amount" :  amount of spent source currency of order}
 
-        :param order: TradeOrder
-        :return: dict
+        This dict could be used to update TradeOrder. Update order with this data only if filled amount of order is
+         almost equal with the recent "filled" amount received from the order!!!!
+
+        Args:
+            order: TradeOrder
+        Returns:
+             dict with the order's update data
         """
 
         trades = self.get_trades(order)
@@ -708,12 +902,26 @@ class ccxtExchangeWrapper:
             results["dest_amount"] = results["cost"]
             results["src_amount"] = results["filled"]
 
-        # we dont need "amount" because amount provuded by trades is filled amount not the order's amount
+        # we dont need "amount" because amount provided by trades is filled amount not the order's amount
         results.pop("amount")
 
         return results
 
     def amount_to_precision(self, symbol, amount):
+        """
+        returns the converted amount to precision set using the ccxt's amount_to_precision method for online mode or
+        tooks the precision from the offline markets data self.markets[symbol]["precision"]["amount"] (if available)
+        in offline mode. If the precision information not found uses the default's wrapper's precision value.
+
+        Usually amount to precision are used for calculating the amount of base currency order.
+
+        Args:
+            symbol: string with the symbol
+            amount: float with the amount to be converted to precision
+
+        Returns:
+            float
+        """
         if self._ccxt is not None and not self.offline:
             return float(self._ccxt.amount_to_precision(symbol, amount))
 
@@ -725,6 +933,21 @@ class ccxtExchangeWrapper:
             return core.amount_to_precision(amount, self._PRECISION_AMOUNT)
 
     def price_to_precision(self, symbol, amount):
+        """
+        returns the converted amount to precision set using the ccxt's price_to_precision method for online mode or
+        tooks the precision from the offline markets data self.markets[symbol]["precision"]["price"] (if available) in
+        offline mode. If the precision information not found uses the default's wrapper's precision value.
+
+        Usually amount to precision are used for calculating the amount of quote currency of order or price.
+
+        Args:
+            symbol: string with the symbol
+            amount: float with the amount to be converted to precision
+
+        Returns:
+            float
+        """
+
         if self._ccxt is not None and not self.offline:
             return float(self._ccxt.price_to_precision(symbol, amount))
         elif self.markets is not None and symbol in self.markets and self.markets[symbol] is not None \
@@ -758,8 +981,7 @@ class ccxtExchangeWrapper:
 
     def init_async_exchange(self):
         """
-        init async ccxt exchange object and load markets
-        :return: none
+        Inits async ccxt exchange object and load markets
         """
         exchange_async = getattr(accxt, self.exchange_id)
         self._async_ccxt = exchange_async()
@@ -768,6 +990,21 @@ class ccxtExchangeWrapper:
         loop.run_until_complete(self._async_load_markets(self._async_ccxt))
 
     def get_order_books_async(self, symbols):
+        """
+        Fetches the order books for list of symbols in async mode. Waits till the all order books are being fetched.
+
+        In offline mode if the order book data is not loaded - the order book will be created from the ticker price.
+
+        If the throttling is enabled, the requests with the weight of "fetch_order_book" will be counted for every
+        requested order book in list.
+
+        Args:
+            symbols: list of symbols to be fetched
+
+        Returns:
+            dict  of order books data where key is the symbol of fetched order book
+
+        """
         loop = asyncio.get_event_loop()
         tasks = list()
 
@@ -778,6 +1015,14 @@ class ccxtExchangeWrapper:
         return ob_array
 
     def fetch_free_balance(self):
+        """
+        Fetched the free balance from the exchange. In offline mode returns the  self._offline_balance["free"]
+        If the throttling is enabled, the requests with the weight of "fetch_balance" will be counted.
+
+        Returns:
+            dict with the balances as in ccxt
+
+        """
         if self.requests_throttle is not None:
             self.requests_throttle.add_request(request_type="fetch_balance")
 
@@ -790,6 +1035,15 @@ class ccxtExchangeWrapper:
         return result
 
     def fetch_balance(self):
+        """
+        Fetched the all balances from the exchange. In offline mode returns the  self._offline_balance
+        If the throttling is enabled, the requests with the weight of "fetch_balance" will be counted.
+
+        Returns:
+            dict with the balances as in ccxt
+
+        """
+
         if self.requests_throttle is not None:
             self.requests_throttle.add_request(request_type="fetch_balance")
 
@@ -809,14 +1063,16 @@ class ccxtExchangeWrapper:
 
     def create_order_offline_data(self, order: TradeOrder, updates_to_fill: int = 1, zero_fill_updates: int = 0):
         """
-        creates data for order's updates. Could be used to model differen filling situations
+        Creates offline data for order's updates. The fill amount will be set in accordace to arguments.
 
-        :param order: TradeOrde: order for which data will be generated
-        :param updates_to_fill: number of updates till 100% fill of order
-        :param zero_fill_updates: number of updates from creation of order while fill amount will be zero.
-        Should be less or equal to updates_to_fill
+        Args:
+            order: TradeOrde: order for which data will be generated
+            updates_to_fill: number of updates till 100% fill of order in linear manner.
+            zero_fill_updates: number of updates from creation of order while fill amount will be zero.
+            Should be less or equal to updates_to_fill. The rest updates till updates_to_fill will fill the 100%.
 
-        :return: order responces data to be provided via offline_fetch_order
+        Returns:
+             order responses data to be provided via offline_fetch_order
         """
 
         order_resp = dict()
@@ -876,6 +1132,14 @@ class ccxtExchangeWrapper:
         return order_resp
 
     def add_offline_order_data(self, order: TradeOrder, updates_to_fill=1, fill_zero_updates=0):
+        """
+        Creates and adds the offline order updates data.
+        Parameters  as in create_order_offline_data
+
+        Returns:
+            int with the order's internal id
+
+        """
         o = self.create_order_offline_data(order, updates_to_fill, fill_zero_updates)
         order_id = order.internal_id
         self._offline_orders_data[order_id] = dict()
