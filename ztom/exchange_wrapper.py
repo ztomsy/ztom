@@ -829,14 +829,17 @@ class ccxtExchangeWrapper:
     @staticmethod
     def fees_from_order_trades(order: TradeOrder):
         """
-        Returns the dict fees as ["<CURRENCY>"]["amount"] from order's trades and order's fee field.
+        Extracts the fees as  dict of ["<CURRENCY>"]["amount"] from order's trades and order's fee field.
         In order to extract fees from trades - Order should be updated with trades before calling this method.
         This method does not request the exchange!
 
         Args:
             order: TradeOrder
         Returns:
-              the dict of cumulative for every currency  as {"<CURRENCY>": amount"}
+          dict: key is currency and value is amount of fee collected in this currency. In some rare
+          cases fee could be taken in several currencies:
+           {"ETH":0.00001,
+           "BNB":0.0000000001}
         """
         total_fee = dict()
 

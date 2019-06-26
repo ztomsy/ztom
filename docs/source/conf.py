@@ -34,7 +34,7 @@ release = '0.5'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ["sphinx.ext.autodoc", 'sphinx_markdown_tables', 'recommonmark']
+extensions = ["sphinx.ext.autodoc", 'sphinx_markdown_tables', 'recommonmark', 'sphinxcontrib.napoleon']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -50,7 +50,9 @@ exclude_patterns = []
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'classic'
+html_theme = 'alabaster'
+html_theme_options = {
+    'page_width': '70%'}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -59,6 +61,20 @@ html_static_path = ['_static']
 
 source_suffix = ['.rst', '.md']
 
+# Napoleon settings
+napoleon_google_docstring = True
+napoleon_numpy_docstring = True
+napoleon_include_init_with_doc = False
+napoleon_include_private_with_doc = False
+napoleon_include_special_with_doc = True
+napoleon_use_admonition_for_examples = False
+napoleon_use_admonition_for_notes = False
+napoleon_use_admonition_for_references = False
+napoleon_use_ivar = False
+napoleon_use_param = True
+napoleon_use_rtype = False
+napoleon_custom_sections = None
+
 # At the bottom of conf.py
 
 def setup(app):
@@ -66,6 +82,6 @@ def setup(app):
             # 'url_resolver': lambda url: github_doc_root + url,
             'auto_toc_tree_section': 'Contents',
             'enable_eval_rst': True,
-            'enable_auto_doc_ref': True,
+            # 'enable_auto_doc_ref': True,
     }, True)
     app.add_transform(AutoStructify)

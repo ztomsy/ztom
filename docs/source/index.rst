@@ -1,13 +1,38 @@
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+
+   installation
+   exchange_wrapper
+   tutorial/get_start
+   reference
+
 ZTOM
 =====
 
-ZTOM is the Python SDK for implementing the Trade Order Management System for crypto exchanges.
+ZTOM is the Python SDK for implementing the Trade Order Management System for crypto exchanges. It's main target is to
+provide simple, smooth and failsafe framework for preparation and execution of orders.
 
-It's build upon the `CCXT <https://github.com/ccxt/ccxt>`__ library and simplifies the development of fail-safe applications and trading algorithms by providing tools for managing the trade orders execution and control.
+Other side is to provide
+the offline testing capabilities for orders management (orders emulation) which could save a lot of time and money for
+developers.
 
-With ZTOM it's possible to create, maintain and cancel trade orders using different triggers and conditions apart from the implementation of exchange's communication API. 
+Means that ZTOM covers most of the trading workflows and makes it exchange independent and offline-testable (see
+Tutorials section for details):
 
-Could be used for Algorithmic (algo) and High Frequency Trading (hft) for prototyping and production.
+* exchange connection
+* market data gathering
+* order configuration
+* order placement
+* order execution tracking
+* compilation of order execution results: filled amounts, trades, fees collection and etc
+* trading application configuration
+* reporting and logging
+
+ZTOM based upon the `CCXT <https://github.com/ccxt/ccxt>`__ library.
+
+It could be used for Algorithmic (algo) and High Frequency Trading (hft) for prototyping and production.
 
 **Main Features:**
 
@@ -19,10 +44,11 @@ Could be used for Algorithmic (algo) and High Frequency Trading (hft) for protot
 * Logging, Reporting
 * Errors management
 * Offline testing:
-  * Back testing with prepared marked data 
-  * Order execution emulation
 
-Code Example
+  - Back testing with prepared marked data
+  - Order execution emulation
+
+Overview Example
 ---------------------
 
 
@@ -104,33 +130,6 @@ Components and Features Overview
      - implements ""smart"" orders which could perform some actions (creation and cancellation of orders) in dependence
        from the data provided by order manager or application"
 
-
-
-Installation
-------------
-
-(the installation from pypi will be implemented soon)
-
-**Requirements:**  python3.6+ and some libs
-
-1. Clone the repo:
-      .. code-block::
-
-        git clone https://github.com/ztomsy/ztom.git
-2. Install the dependencies:
-    .. code-block::
-
-        pip3 install -r requirements.txt
-
-3. Install the ztom lib
-    .. code-block::
-
-       pip3 install -e .
-
-4. Run some tests:
-    .. code-block::
-
-       python3 -m unittest -v -b
 
 License
 -------

@@ -1,5 +1,5 @@
 .. automodule:: ztom.ccxtExchangeWrapper
-    :members:
+
 
 ccxtExchangeWrapper
 ===================
@@ -41,7 +41,5 @@ Quick Start
 -----------
 
 
-
-.. autoclass:: ztom.ccxtExchangeWrapper
-    :members:
+dasd fsad fasd
 
