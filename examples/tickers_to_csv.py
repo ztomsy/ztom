@@ -13,7 +13,7 @@ used as an offline data sources for ztom.
 number_of_fetches = 10
 exchange_id = "binance"
 append_tickers = False
-symbols_to_save = ["ETH/BTC", "BNB/ETH", "BNB/BTC"]  # [] if to save all the symbols
+symbols_to_save = []  # or ["ETH/BTC", "BNB/ETH", "BNB/BTC"]  to save these particular symbols in markets and tickers
 
 """
 /// start  
