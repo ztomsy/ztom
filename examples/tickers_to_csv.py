@@ -1,13 +1,19 @@
 import ztom
 import csv
+import json
+import datetime
+
 """
-This will save all fetched tickers to tickers.csv file in current folder. 
+This will save markets data and tickers and to tickers.csv and markets.json in current folder. These files could be 
+used as an offline data sources for ztom. 
+
 """
 
 # parameters
 number_of_fetches = 10
 exchange_id = "binance"
-append = False
+append_tickers = False
+symbols_to_save = ["ETH/BTC", "BNB/ETH", "BNB/BTC"]  # [] if to save all the symbols
 
 """
 /// start  
@@ -17,11 +23,11 @@ print("Started")
 storage = ztom.DataStorage(".")
 
 storage.register("tickers", ["fetch_id", "timestamp", "symbol", "ask", "bid", "askVolume", "bidVolume"],
-                 overwrite=not append)
+                 overwrite=not append_tickers)
 
 last_fetch_id = 0
 # getting last fetch_id in csv file
-if append:
+if append_tickers:
     with open(storage.entities["tickers"]["full_path"], "r") as csvfile:
         not_header = False
         for row in csv.reader(csvfile):
@@ -35,6 +41,18 @@ if append:
 
 ex = ztom.ccxtExchangeWrapper.load_from_id(exchange_id)  # type: ztom.ccxtExchangeWrapper
 ex.enable_requests_throttle()
+ex.load_markets()
+
+markets_to_save = dict()
+
+if len(symbols_to_save) > 0:
+    markets_to_save = {k: v for k, v in ex.markets.items() if k in symbols_to_save}
+else:
+    markets_to_save = ex.markets
+
+
+with open('markets.json', 'w') as outfile:
+    json.dump(markets_to_save, outfile)
 
 print("Init exchange")
 
@@ -53,14 +71,18 @@ for i in range(0, number_of_fetches):
     print("... done")
 
     tickers_to_save = list()
+    time_stamp = datetime.datetime.now().timestamp()
 
     for symbol, ticker in tickers.items():
-        tickers_to_save.append({"fetch_id": i+last_fetch_id, "timestamp": "000000000000", "symbol": symbol,
-                                "ask": ticker["ask"],
-                                "bid": ticker["bid"],
-                                "askVolume": ticker["askVolume"],
-                                "bidVolume": ticker["bidVolume"]})
+        if (len(symbols_to_save) > 0 and symbol in symbols_to_save) or len(symbols_to_save) == 0:
+            tickers_to_save.append({"fetch_id": i+last_fetch_id, "timestamp": time_stamp, "symbol": symbol,
+                                    "ask": ticker["ask"],
+                                    "bid": ticker["bid"],
+                                    "askVolume": ticker["askVolume"],
+                                    "bidVolume": ticker["bidVolume"]})
 
     storage.save_dict_all("tickers", tickers_to_save)
+
+
 
 print("OK")
