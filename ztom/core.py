@@ -127,7 +127,7 @@ def relative_target_price_difference(side: str, target_price: float, current_pri
     raise (ValueError("Wrong side of the order {}".format(side)))
 
 
-def convert_currency(start_currency, start_amount, dest_currency: str = None, symbol: str = None, price: float = None,
+def convert_currency(start_currency:str, start_amount:float, dest_currency: str = None, symbol: str = None, price: float = None,
                      ticker: dict = None, side: str = None, taker: bool = True):
     """
     :returns the amount of :param dest_currency: which could be gained if converted from :param start_amount:

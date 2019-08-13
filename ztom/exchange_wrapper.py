@@ -963,13 +963,13 @@ class ccxtExchangeWrapper:
     async def _async_load_markets(exchange):
         await exchange.load_markets()
 
-    async def _get_order_book_async(self, symbol):
+    async def _get_order_book_async(self, symbol, limit=None):
 
         if self.requests_throttle is not None:
             self.requests_throttle.add_request(request_type="fetch_order_book")
 
         if not self.offline:
-            ob = await self._async_ccxt.fetch_order_book(symbol, 100)
+            ob = await self._async_ccxt.fetch_order_book(symbol, limit=limit)
 
         else:
             if not self._offline_order_books or symbol not in self._offline_order_books:
@@ -987,12 +987,12 @@ class ccxtExchangeWrapper:
         Inits async ccxt exchange object and load markets
         """
         exchange_async = getattr(accxt, self.exchange_id)
-        self._async_ccxt = exchange_async()
+        self._async_ccxt = exchange_async() # type: accxt.Exchange
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_load_markets(self._async_ccxt))
 
-    def get_order_books_async(self, symbols):
+    def get_order_books_async(self, symbols, limit = None):
         """
         Fetches the order books for list of symbols in async mode. Waits till the all order books are being fetched.
 
@@ -1012,7 +1012,7 @@ class ccxtExchangeWrapper:
         tasks = list()
 
         for s in symbols:
-            tasks.append(self._get_order_book_async(s))
+            tasks.append(self._get_order_book_async(s, limit=limit))
 
         ob_array = loop.run_until_complete(asyncio.gather(*tasks))
         return ob_array
