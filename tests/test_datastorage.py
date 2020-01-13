@@ -58,3 +58,36 @@ class DataStorageTestSuite(unittest.TestCase):
         with open(self.storage.path(type_name), 'r') as file:
             return file.read()
 
+    def test_get_nested_from_dict(self):
+        column = "column_name__section__subsection__field_name"
+        dict = {
+            "column_name": {
+                "section": {
+                    "subsection":
+                        {"field_name": "value"}
+                }
+            }
+        }
+        val = self.storage._get_nested_from_dict(dict, column)
+        self.assertEqual("value", val)
+
+        column = "field_name"
+        dict = {"field_name": "value2"}
+
+        val = self.storage._get_nested_from_dict(dict, column)
+        self.assertEqual("value2", val)
+
+        self.storage.register('pepe', ['a__a1__a-2', 'b__b1_b2', 'c'])
+        self.storage.save_dict('pepe',
+                               {'b':
+                                    {"b1_b2": "val_b"}
+                                     ,
+                                'a': {
+                                    "a1":
+                                        {"a-2": "val_a2"}
+                                },
+                                'c': 2.0})
+
+        self.assertEqual('a__a1__a-2,b__b1_b2,c\nval_a2,val_b,2.0\n', self.file_contents('pepe'))
+
+

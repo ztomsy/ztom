@@ -1,9 +1,16 @@
 import collections
 import os
 import csv
-
+from . import utils
 """
-Class allows creation of csv based data storage
+Class allows creation of csv based data storage. It' possible to save data from the list or nested dicts.
+
+In case of  nested dics: the columns mapped to nested dict fields should contain "__" as attribute delimeter
+
+for example: 
+    Column name :  "column_name__section__sub_section__field_name" will contain the value of 
+    dict["column_name"["section"]["sub_section"]["field_name"] 
+
 Usage:
 at the beginning create storage: 
 >>> storage = tgk.DataStorage('./storage1')
@@ -12,9 +19,11 @@ register your data types:
 >>> headers = ['leg1', 'leg2', ...]
 >>> storage.register('Exchange', headers)
 
-then save data:
->>> row = [leg1, leg2, ...]
->>> storage.save('Ticker', row)
+then save data: 
+    - from list:
+    >>> row = [leg1, leg2, ...]
+    >>> storage.save('Ticker', row)
+    - or from the nested dict
 
 at the end stop storage:
 >>> storage.stop()
@@ -73,9 +82,18 @@ class DataStorage:
     def path(self, type_name):
         return self.entities[type_name]['file'].name
 
+    def _get_nested_from_dict(self, dict, column_name):
+
+        path = column_name.split("__")
+        return utils.dict_value_from_path(dict, path, True)
+
     def save_dict(self, type_name, data):
+        """
+        todo = modify lambda - insert _get_nested_from_dict
+
+        """
         headers = self.entities[type_name]['headers']
-        values = list(map(lambda k: data.get(k, ''), headers))
+        values = list(map(lambda k: self._get_nested_from_dict(data, k), headers))
         self.save(type_name, values)
 
     def save_dict_all(self, type_name, array):
