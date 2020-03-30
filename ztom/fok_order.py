@@ -1,11 +1,29 @@
 from ztom.trade_orders import TradeOrder
 from ztom.action_order import ActionOrder
 from ztom import core
+import datetime
+
 
 class FokOrder(ActionOrder):
     """
     implement basic FOK order by limiting maximum trade order updates and than cancel
     """
+
+    def __init__(self, symbol, amount: float, price: float, side: str, cancel_threshold: float = 0.000001,
+                 max_order_updates: int = 10, time_to_cancel: float = 0.0):
+
+        super().__init__(symbol, amount, price, side, cancel_threshold, max_order_updates)
+        self.time_to_cancel = time_to_cancel
+
+    @classmethod
+    def create_from_start_amount(cls, symbol, start_currency, amount_start, dest_currency, price,
+                                 cancel_threshold: float = 0.000001, max_order_updates: int = 10,
+                                 time_to_cancel: float = 0.0):
+
+        order = super().create_from_start_amount(symbol, start_currency, amount_start, dest_currency, price,
+                            cancel_threshold, max_order_updates)
+        order.time_to_cancel = time_to_cancel
+        return order
 
     def _init(self):
         super()._init()
@@ -14,20 +32,31 @@ class FokOrder(ActionOrder):
 
     # redefine the _on_open_order checker to cancel active trade order if the number of order updates more
     # than max_order_updates
-    def _on_open_order(self, active_trade_order: TradeOrder, market_data = None):
+    def _on_open_order(self, active_trade_order: TradeOrder, market_data=None):
+
+        now = datetime.datetime.now().timestamp()
+
+        if self.time_to_cancel > 0.0:
+            if now - active_trade_order.timestamp_open.get("request_received", now) >= self.time_to_cancel:
+                self.tags.append("#timeout")
+                return "cancel"
+            else:
+                return "hold"
+
         if active_trade_order.update_requests_count >= self.max_order_updates \
                 and active_trade_order.amount - active_trade_order.filled > self.cancel_threshold:
             return "cancel"
         return "hold"
 
 
-class FokThresholdTakerPriceOrder(ActionOrder):
+class FokThresholdTakerPriceOrder(FokOrder):
     """
     FOK order which is cancelled if the taker price drops by defined threshold
     """
 
     def __init__(self,  symbol, amount: float, price: float, side: str,
-                 cancel_threshold: float = 0.000001, max_order_updates: int = 10, taker_price_threshold: float = -0.01,
+                 cancel_threshold: float = 0.000001, max_order_updates: int = 10, time_to_cancel: float = 0.0,
+                 taker_price_threshold: float = -0.01,
                  threshold_check_after_updates: int = 5):
         """
 
@@ -46,7 +75,7 @@ class FokThresholdTakerPriceOrder(ActionOrder):
         threshold
         """
 
-        super().__init__(symbol, amount, price, side, cancel_threshold, max_order_updates)
+        super().__init__(symbol, amount, price, side, cancel_threshold, max_order_updates, time_to_cancel)
 
         self.taker_price_threshold = taker_price_threshold
         self.threshold_check_after_updates = threshold_check_after_updates
@@ -54,6 +83,7 @@ class FokThresholdTakerPriceOrder(ActionOrder):
     @classmethod
     def create_from_start_amount(cls, symbol, start_currency, amount_start, dest_currency, price,
                                  cancel_threshold: float=0.000001, max_order_updates: int=10,
+                                 time_to_cancel: float = 0.0,
                                  taker_price_threshold: float = -0.01, threshold_check_after_updates: int = 5):
 
         """
@@ -75,7 +105,7 @@ class FokThresholdTakerPriceOrder(ActionOrder):
         """
 
         order = super().create_from_start_amount(symbol, start_currency, amount_start, dest_currency, price,
-                                                 cancel_threshold, max_order_updates)
+                                                 cancel_threshold, max_order_updates, time_to_cancel)
 
         order.taker_price_threshold = taker_price_threshold
         order.threshold_check_after_updates = threshold_check_after_updates
@@ -90,8 +120,11 @@ class FokThresholdTakerPriceOrder(ActionOrder):
     def _on_open_order(self, active_trade_order: TradeOrder, market_data=None):
 
         # cancel if have reached the maximum number of updates
-        if active_trade_order.update_requests_count >= self.max_order_updates \
-                and active_trade_order.amount - active_trade_order.filled > self.cancel_threshold:
+        # if active_trade_order.update_requests_count >= self.max_order_updates \
+        #         and active_trade_order.amount - active_trade_order.filled > self.cancel_threshold:
+        #     return "cancel"
+
+        if super()._on_open_order(active_trade_order, market_data) == "cancel":
             return "cancel"
 
         order_command = "hold"
