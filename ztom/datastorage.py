@@ -2,6 +2,8 @@ import collections
 import os
 import csv
 from . import utils
+from pathlib import Path
+
 """
 Class allows creation of csv based data storage. It' possible to save data from the list or nested dicts.
 
@@ -42,7 +44,7 @@ class DataStorage:
         # self.validate_not_exists(type_name)
         full_path = os.path.join(self.folder, type_name + ".csv")
         exists = False
-        if os.path.exists(full_path) and not overwrite:
+        if os.path.exists(full_path) or not overwrite:
             file = open(full_path, "a", newline='')
             exists = True
         else:
