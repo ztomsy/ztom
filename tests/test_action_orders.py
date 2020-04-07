@@ -274,7 +274,7 @@ class ActionOrderTestSuite(unittest.TestCase):
     def test_snapshots(self):
         ao = ActionOrder.create_from_start_amount("ADA/ETH", "ADA", 1000, "ETH", 0.32485131)
 
-        self.assertFalse(ao.changed_from_last_update)
+        self.assertTrue(ao.changed_from_last_update)
 
         snapshot = ao._snapshot()
         self.assertEqual(snapshot.symbol, "ADA/ETH")

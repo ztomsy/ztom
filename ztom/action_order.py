@@ -86,7 +86,7 @@ class ActionOrder(object):
         # different tags for additional information
         self.tags = list()
 
-        self.changed_from_last_update = False
+        self.changed_from_last_update = True
         """
         is changed from last update
         """
@@ -344,16 +344,21 @@ class ActionOrder(object):
         else:
             raise errors.OrderError("Not all parameters for Order are set")
 
-    def __str__(self):
-        s = "ActionOrder: {action_order_id} for {start_currency} -{side}-> {dest_currency} filled {filled}/{amount}"\
+    def __str_status__(self):
+        """
+        Returns string respresentation of essential order informatin, Used in order manager logging
+        """
+        s = "{start_currency} -{side}-> {dest_currency} filled {filled}/{amount}" \
             .format(
-                action_order_id=self.id,
-                start_currency=self.start_currency,
-                side=self.side,
-                dest_currency=self.dest_currency,
-                filled=self.active_trade_order.filled,
-                amount=self.active_trade_order.amount
-            )
+                    start_currency=self.start_currency,
+                    side=self.side,
+                    dest_currency=self.dest_currency,
+                    filled=self.active_trade_order.filled,
+                    amount=self.active_trade_order.amount)
+        return s
+
+    def __str__(self):
+        s = "ActionOrder " + self.__str_status__()
         return s
 
     def _snapshot(self):
