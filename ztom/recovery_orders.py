@@ -37,6 +37,10 @@ class RecoveryOrder(ActionOrder):
         :param max_order_updates:  max order updates for market price trade orders
 
         """
+
+        # just to instantiate class, will set all the necessary parameters properly below
+        super().__init__(symbol, 0.0, 1, "")
+
         self.id = str(uuid.uuid4())
         self.timestamp = time.time()  # timestamp of object creation
         self.timestamp_close = float()
