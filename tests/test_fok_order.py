@@ -60,6 +60,34 @@ class FokTestSuite(unittest.TestCase):
         self.assertEqual(11, fok_order.orders_history[0].update_requests_count)
         self.assertNotIn("#timeout", fok_order.tags)
 
+    def test_fok_order_order_manager(self):
+
+        ex = ccxtExchangeWrapper.load_from_id("binance")
+        ex.set_offline_mode("test_data/markets.json", "test_data/tickers.csv")
+        ex.load_markets()
+        order1 = FokOrder("ABC/XYZ", 1, 5, "sell", max_order_updates=3, time_to_cancel=0.5)
+
+        om = ActionOrderManager(ex)
+
+        # offline order update data will be created to fill order in 10 updates
+        om.offline_order_updates = 10
+
+        om.add_order(order1)
+
+        i = 0
+        while len(om.get_open_orders()) > 0:
+            i += 1
+            om.proceed_orders()
+            time.sleep(0.1)
+
+        self.assertEqual("closed", order1.status)
+        self.assertAlmostEqual(order1.amount / 2, order1.filled, delta=0.0001)
+
+        # 2 extra updates from order manager updating trade order without requesting the exchange
+        self.assertEqual(8, order1.orders_history[-1].update_requests_count)
+
+
+
 
 
 
