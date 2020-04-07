@@ -155,77 +155,44 @@ class RecoveryOrder(ActionOrder):
         else:
             raise errors.OrderError("Not all parameters for Order are set")
 
-    def update_from_exchange(self, resp, market_data=None):
-        """
-        :param resp:
-        :param market_data: some market data (price, orderbook?) for new tradeOrder
-        :return: updates the self.order_command
+    def _on_open_order(self, active_trade_order: TradeOrder, market_data):
+        self.order_command = "hold"
 
-        """
-        self.active_trade_order.update_order_from_exchange_resp(resp)
+        current_state_max_order_updates = self.max_best_amount_orders_updates if self.state == "best_amount" \
+            else self.max_order_updates
 
-        self.filled_dest_amount = self._prev_filled_dest_amount + self.active_trade_order.filled_dest_amount
-        self.filled_start_amount = self._prev_filled_start_amount + self.active_trade_order.filled_start_amount
+        if self.active_trade_order.update_requests_count >= current_state_max_order_updates \
+                and self.active_trade_order.amount - self.active_trade_order.filled > self.cancel_threshold:
+            # add ticker request command to order manager
+            self.order_command = "cancel tickers {symbol}".format(symbol=self.active_trade_order.symbol)
 
-        if self.filled_dest_amount != 0 and self.filled_start_amount != 0:
-            self.filled_price = self.filled_start_amount / self.filled_dest_amount if self.side == "buy" else \
-                self.filled_dest_amount / self.filled_start_amount
+        return self.order_command
 
-        self.filled = self._prev_filled + self.active_trade_order.filled
+    def _on_closed_order(self, active_trade_order: TradeOrder, market_data=None):
+        if self.filled_start_amount >= self.start_amount * 0.99999:  # close order if filled amount is OK
+            self.order_command = ""
+            self._close_active_order()
+            self.close_order()
+            return self.order_command
 
-        if self.state == "best_amount" or self.state == "market_price":
+        self.state = "market_price"  # else set new order status
+        if market_data is not None and market_data[0] is not None:
+            self._close_active_order()
 
-            if self.active_trade_order.status == "open":
-                self.order_command = "hold"
+            ticker = market_data[0]
 
-                current_state_max_order_updates = self.max_best_amount_orders_updates if self.state == "best_amount" \
-                    else self.max_order_updates
+            new_price = core.get_symbol_order_price_from_tickers(self.start_currency, self.dest_currency,
+                                                                 {self.symbol: ticker})["price"]
 
-                if self.active_trade_order.update_requests_count >= current_state_max_order_updates \
-                        and self.active_trade_order.amount - self.active_trade_order.filled > self.cancel_threshold:
+            self.active_trade_order = self._create_recovery_order(new_price, self.state)
+            self.order_command = "new"
+        else:
+            # if we did not received ticker - so just re request the ticker
+            self.order_command = "hold tickers {symbol}".format(symbol=self.active_trade_order.symbol)
 
-                    # add ticker request command to order manager
-                    self.order_command = "cancel tickers {symbol}".format(symbol=self.active_trade_order.symbol)
+            # print("New price not set... Hodling..")
+            # raise errors.OrderError("New price not set")
 
-                return self.order_command
+        return self.order_command
 
-            # if self.state == "best_amount" and self.active_trade_order.status == "closed" and\
-            #         self.filled >= self.amount*0.999999:
-            #
-            #     self.order_command = ""
-            #     self._close_active_order()
-            #     self.close_order()
-            #     return self.order_command
-
-            if self.active_trade_order.status == "closed" or self.active_trade_order.status == "canceled":
-
-                if self.filled_start_amount >= self.start_amount*0.99999:  # close order if filled amount is OK
-                    self.order_command = ""
-                    self._close_active_order()
-                    self.close_order()
-                    return self.order_command
-
-                self.state = "market_price"  # else set new order status
-                if market_data is not None and market_data[0] is not None:
-                    self._close_active_order()
-
-                    ticker = market_data[0]
-
-                    new_price = core.get_symbol_order_price_from_tickers(self.start_currency, self.dest_currency,
-                                                                         {self.symbol: ticker})["price"]
-
-                    self.active_trade_order = self._create_recovery_order(new_price, self.state)
-                    self.order_command = "new"
-                else:
-                    # if we did not received ticker - so just re request the ticker
-                    self.order_command = "hold tickers {symbol}".format(symbol=self.active_trade_order.symbol)
-
-                    # print("New price not set... Hodling..")
-                    # raise errors.OrderError("New price not set")
-
-                return self.order_command
-
-
-    def check_aim(self):
-        pass
 
