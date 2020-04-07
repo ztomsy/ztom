@@ -14,6 +14,7 @@ class FokOrder(ActionOrder):
 
         super().__init__(symbol, amount, price, side, cancel_threshold, max_order_updates)
         self.time_to_cancel = time_to_cancel
+        self.time_from_create = 0
 
     @classmethod
     def create_from_start_amount(cls, symbol, start_currency, amount_start, dest_currency, price,
@@ -21,7 +22,7 @@ class FokOrder(ActionOrder):
                                  time_to_cancel: float = 0.0):
 
         order = super().create_from_start_amount(symbol, start_currency, amount_start, dest_currency, price,
-                            cancel_threshold, max_order_updates)
+                                                 cancel_threshold, max_order_updates)
         order.time_to_cancel = time_to_cancel
         return order
 
@@ -35,9 +36,10 @@ class FokOrder(ActionOrder):
     def _on_open_order(self, active_trade_order: TradeOrder, market_data=None):
 
         now = datetime.datetime.now().timestamp()
+        self.time_from_create = now - active_trade_order.timestamp_open.get("request_received", now)
 
         if self.time_to_cancel > 0.0:
-            if now - active_trade_order.timestamp_open.get("request_received", now) >= self.time_to_cancel:
+            if self.time_from_create >= self.time_to_cancel:
                 self.tags.append("#timeout")
                 return "cancel"
             else:
@@ -48,13 +50,29 @@ class FokOrder(ActionOrder):
             return "cancel"
         return "hold"
 
+    def __str_status__(self):
+        s = "{start_currency} -{side}-> {dest_currency} filled {filled}/{amount} " \
+            "upd {update_requests_count}/{max_order_updates} " \
+            "time {time_from_create}/{time_to_cancel}"\
+            .format(
+                start_currency=self.start_currency,
+                side=self.side,
+                dest_currency=self.dest_currency,
+                filled=self.active_trade_order.filled,
+                amount=self.active_trade_order.amount,
+                update_requests_count=self.active_trade_order.update_requests_count,
+                max_order_updates=self.max_order_updates,
+                time_from_create=self.time_from_create,
+                time_to_cancel=self.time_to_cancel)
+        return s
+
 
 class FokThresholdTakerPriceOrder(FokOrder):
     """
     FOK order which is cancelled if the taker price drops by defined threshold
     """
 
-    def __init__(self,  symbol, amount: float, price: float, side: str,
+    def __init__(self, symbol, amount: float, price: float, side: str,
                  cancel_threshold: float = 0.000001, max_order_updates: int = 10, time_to_cancel: float = 0.0,
                  taker_price_threshold: float = -0.01,
                  threshold_check_after_updates: int = 5):
@@ -82,7 +100,7 @@ class FokThresholdTakerPriceOrder(FokOrder):
 
     @classmethod
     def create_from_start_amount(cls, symbol, start_currency, amount_start, dest_currency, price,
-                                 cancel_threshold: float=0.000001, max_order_updates: int=10,
+                                 cancel_threshold: float = 0.000001, max_order_updates: int = 10,
                                  time_to_cancel: float = 0.0,
                                  taker_price_threshold: float = -0.01, threshold_check_after_updates: int = 5):
 
@@ -115,7 +133,7 @@ class FokThresholdTakerPriceOrder(FokOrder):
     def _init(self):
         super()._init()
         self.state = "fok"  # just to make things a little pretty
-        self.active_trade_order.supplementary.update({"parent_action_order":{"state":self.state}})
+        self.active_trade_order.supplementary.update({"parent_action_order": {"state": self.state}})
 
     def _on_open_order(self, active_trade_order: TradeOrder, market_data=None):
 
