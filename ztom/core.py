@@ -204,3 +204,32 @@ def ticker_price_for_dest_amount(side: str, start_amount: float, dest_amount: fl
         return dest_amount / start_amount
 
     return False
+
+
+def base_amount_for_target_currency(currency, amount, symbol, price: float=None, ticker:dict=None):
+    """
+    Returns amount in base currency in symbol for provided currency, amount and price.
+    Price could be set directly or taken as taker from ticker symbol dict.
+
+    Returns: amount for base currency or 0 if prices are not provided
+
+    """
+
+    side = get_trade_direction_to_currency(symbol, dest_currency=currency)
+
+    if currency == symbol.split("/")[0]:
+        return amount
+
+    else:
+
+        ticker_price = 0.0
+
+        if price is None and ticker_price is not None:
+            ticker_price = ticker.get("bid", 0.0)
+        elif price is not None:
+            ticker_price = price
+
+        if ticker_price == 0.0:
+            return 0
+
+        return amount / ticker_price

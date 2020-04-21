@@ -148,8 +148,34 @@ class CoreFuncTestSuite(unittest.TestCase):
         price = core.ticker_price_for_dest_amount("buy", 1, 70)
         self.assertAlmostEqual(price, 1/70, 8)
 
+    def test_order_amount_for_target_currency(self):
 
+        symbol = "USD/RUB"
+        price = 50
 
+        ticker = {"USD/RUB": {
+            "ask": 1000,
+            "bid": 100
+        }}
+
+        base_amount = core.base_amount_for_target_currency("RUB", 100, symbol, price)
+        self.assertEqual(2, base_amount)
+
+        base_amount = core.base_amount_for_target_currency("USD", 100, symbol, price)
+        self.assertEqual(100, base_amount)
+
+        base_amount = core.base_amount_for_target_currency("USD", 100, symbol, ticker=ticker[symbol])
+        self.assertEqual(100, base_amount)
+
+        base_amount = core.base_amount_for_target_currency("RUB", 100, symbol, ticker=ticker[symbol])
+        self.assertEqual(1, base_amount)
+
+        # error - bid should be set
+        ticker_ask = {"EUR/USD":
+                          {"ask": 2}}
+
+        base_amount = core.base_amount_for_target_currency("USD", 100, "EUR/USD", ticker=ticker_ask["EUR/USD"])
+        self.assertEqual(0, base_amount)
 
 
 if __name__ == '__main__':
