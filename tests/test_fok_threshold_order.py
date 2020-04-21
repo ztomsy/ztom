@@ -2,7 +2,7 @@
 from .context import ztom
 from ztom import FokThresholdTakerPriceOrder, ccxtExchangeWrapper, ActionOrderManager, core, TradeOrder
 import unittest
-
+import time
 
 class FokThresholdOrderTestSuite(unittest.TestCase):
 
@@ -172,6 +172,27 @@ class FokThresholdOrderTestSuite(unittest.TestCase):
 
         self.assertEqual(11, trade_order.update_requests_count)
 
+    def test_cancel_by_time(self):
+        fok_order_time = FokThresholdTakerPriceOrder("ADA/ETH", 1000, 0.32485131 / 1000, "sell", max_order_updates=10,
+                                                time_to_cancel=0.1)
+
+        order_command = fok_order_time.update_from_exchange({})
+
+        ex = ccxtExchangeWrapper.load_from_id("binance")  # type: ccxtExchangeWrapper
+        ex.set_offline_mode("test_data/markets.json", "test_data/tickers.csv")
+
+        om = ActionOrderManager(ex)
+        om.request_trades = False
+
+        om.add_order(fok_order_time)
+        om.proceed_orders()
+        time.sleep(0.11)
+
+        om.proceed_orders()
+        om.proceed_orders()
+
+        self.assertEqual(fok_order_time.status, "closed")
+        self.assertIn("#timeout", fok_order_time.tags)
 
 
 if __name__ == '__main__':

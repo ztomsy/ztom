@@ -67,7 +67,7 @@ class ActionOrderManager(object):
         results = None
         i = 0
         while bool(results) is not True and i < self.max_order_update_attempts:
-            self.log(self.LOG_INFO, "creating order attempt #{}".format(i))
+            self.log(self.LOG_DEBUG, "creating order attempt #{}".format(i))
             try:
                 results = self.exchange.place_limit_order(order)
             except Exception as e:
@@ -86,7 +86,7 @@ class ActionOrderManager(object):
         results = None
         i = 0
         while bool(results) is not True and i < self.max_order_update_attempts:
-            self.log(self.LOG_INFO, "..updating trade order {} / {}".format(i,self.max_order_update_attempts ))
+            self.log(self.LOG_DEBUG, "..updating trade order {} / {}".format(i,self.max_order_update_attempts ))
             try:
                 results = self.exchange.get_order_update(order)
             except Exception as e:
@@ -119,12 +119,12 @@ class ActionOrderManager(object):
                 time.sleep(self.request_sleep)
 
             finally:
-                self.log(self.LOG_INFO, "Updating the Trade Order to check if it was canceled or closed...")
+                self.log(self.LOG_DEBUG, "Updating the Trade Order to check if it was canceled or closed...")
                 resp = self._update_order(trade_order)
-                self.log(self.LOG_INFO, "Update resp: {}".format(resp))
+                self.log(self.LOG_DEBUG, "Update resp: {}".format(resp))
                 if resp is not None and "status" in resp and (resp["status"] == "closed"
                                                               or resp["status"] == "canceled"):
-                    self.log(self.LOG_INFO, "... canceled with status {}".format(resp["status"]))
+                    self.log(self.LOG_DEBUG, "... canceled with status {}".format(resp["status"]))
                     return resp
 
         return None
@@ -142,7 +142,7 @@ class ActionOrderManager(object):
         results = None
         i = 0
         while bool(results) is not True and i < self.max_order_update_attempts:
-            self.log(self.LOG_INFO, "getting trades #{}".format(i))
+            self.log(self.LOG_DEBUG, "getting trades #{}".format(i))
             try:
                 results = self.exchange.get_trades_results(order)
                 return results
@@ -309,10 +309,10 @@ class ActionOrderManager(object):
         """
 
         if not data_request:
-            self.log(self.LOG_ERROR, "ActionOrder:{action_order_id}. Empty data request".format(
+            self.log(self.LOG_ERROR, "Order {action_order_id}. Empty data request".format(
                 action_order_id=action_order_id))
 
-            raise(OwaManagerError("ActionOrder:{action_order_id}. Empty data request".format(
+            raise(OwaManagerError("Order {action_order_id}. Empty data request".format(
                 action_order_id=action_order_id)))
 
         data_request_split = data_request.split(" ")
@@ -321,7 +321,7 @@ class ActionOrderManager(object):
         data_request_key = data_request_split[0]
         data_request_parameters = " ".join(data_request_split[1:])
 
-        self.log(self.LOG_INFO, "ActionOrder:{action_order_id}. Data request: {data_request} ".format(
+        self.log(self.LOG_INFO, "Order {action_order_id}. Data request: {data_request} ".format(
             action_order_id=action_order_id, data_request=data_request))
 
         # try to fetch the data from self.data_for_orders
@@ -329,7 +329,7 @@ class ActionOrderManager(object):
 
         if data_request_key.upper() in [key.upper() for key in self.data_for_orders.keys()]:
 
-            self.log(self.LOG_INFO, "ActionOrder:{action_order_id}. Getting data from self.data_for_orders.".format(
+            self.log(self.LOG_INFO, "Order {action_order_id}. Getting data from self.data_for_orders.".format(
                 action_order_id=action_order_id))
 
             request_value_from_data = utils.dict_value_from_path(self.data_for_orders, data_request_split)
@@ -340,9 +340,9 @@ class ActionOrderManager(object):
         if data_request_key in self.DATA_FETCHING_METHODS:
 
             self.log(self.LOG_INFO,
-                     "ActionOrder:{action_order_id}. Calling {func} for data with params {params}".format(
+                     "Order {action_order_id}. Calling {func} for data with params {params}".format(
                          action_order_id=action_order_id, func=self.DATA_FETCHING_METHODS[data_request_key.lower()],
-                     params = data_request_parameters))
+                         params = data_request_parameters))
 
             _func = getattr(self, self.DATA_FETCHING_METHODS[data_request_key.lower()])
             result_value = _func(data_request_parameters)
@@ -356,7 +356,7 @@ class ActionOrderManager(object):
             return result
 
         # return None if no data source was found
-        self.log(self.LOG_ERROR, "ActionOrder:{action_order_id}. No data source found! ".format(
+        self.log(self.LOG_ERROR, "Order {action_order_id}. No data source found! ".format(
             action_order_id=action_order_id))
         return None
 
@@ -373,7 +373,7 @@ class ActionOrderManager(object):
 
             except Exception as e:
                 results.append(None)
-                self.log(self.LOG_ERROR, "ActionOrder:{action_order_id}. Could not get data for request:"
+                self.log(self.LOG_ERROR, "Order {action_order_id}. Could not get data for request:"
                                          " '{data_request}'".format(data_request=dr, action_order_id=action_order_id))
                 self.log(self.LOG_ERROR, type(e).__name__)
                 self.log(self.LOG_ERROR, e.args)
@@ -397,8 +397,11 @@ class ActionOrderManager(object):
 
             self._prev_orders_status[order.id] = copy.copy(order)
 
-            self.log(self.LOG_INFO, "Order {} status: {}. State {}. Total filled {}/{}".format(
-                order.id, order.status, order.state, order.filled, order.amount))
+            if order.changed_from_last_update:
+                # ActionOrder general status log
+                self.log(self.LOG_INFO, "Order {action_order_id} STATUS {action_order_str_status}"
+                         .format(action_order_id=order.id,
+                                 action_order_str_status=order.__str_status__()))
 
             order_action = self._order_action(order.order_command)
             data_requests = self._data_requests(order.order_command)
@@ -470,17 +473,8 @@ class ActionOrderManager(object):
                 self._update_order_from_exchange(order, resp, market_data)
 
                 if order.get_active_order() is not None:
-                    self.log(self.LOG_INFO,
-                             "ActionOrder {action_order_id} trade order updated {upd_num} / {max_updates} for"
-                             " {start_currency} -{side}-> {dest_currency} filled {filled}/{amount}".format(
-                                 action_order_id=order.id,
-                                 upd_num=order.active_trade_order.update_requests_count,
-                                 max_updates=order.max_order_updates,
-                                 start_currency=order.start_currency,
-                                 side=order.side,
-                                 dest_currency=order.dest_currency,
-                                 filled=order.active_trade_order.filled,
-                                 amount=order.active_trade_order.amount))
+                    if order.changed_from_last_update:
+                        self.log(self.LOG_INFO, str(order))
                 else:
                     o = order.orders_history[-1]
                     self.log(self.LOG_INFO, "Order {} trade order closed {} with status {} filled {}/{}".format(

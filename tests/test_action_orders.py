@@ -271,6 +271,46 @@ class ActionOrderTestSuite(unittest.TestCase):
 
         self.assertEqual("Bad new order amount -1", e.exception.args[0])
 
+    def test_snapshots(self):
+        ao = ActionOrder.create_from_start_amount("ADA/ETH", "ADA", 1000, "ETH", 0.32485131)
+
+        self.assertTrue(ao.changed_from_last_update)
+
+        snapshot = ao._snapshot()
+        self.assertEqual(snapshot.symbol, "ADA/ETH")
+        self.assertEqual(snapshot.filled, 0.0)
+        self.assertEqual("", snapshot.active_trade_order_id)
+        self.assertEqual("", snapshot.active_trade_order_status)
+
+        resp = {"status": "open", "filled": 10, "cost": 0}
+
+        ao.update_from_exchange(resp)
+        self.assertTrue(ao.changed_from_last_update)
+        self.assertEqual(00, ao.previous_snapshot.filled)
+
+        resp = {"status": "open", "filled": 20, "cost": 0}
+
+        ao.update_from_exchange(resp)
+        self.assertTrue(ao.changed_from_last_update)
+        self.assertEqual(10, ao.previous_snapshot.filled)
+
+        resp = {"status": "open", "filled": 20, "cost": 0}
+
+        ao.update_from_exchange(resp)
+        self.assertFalse(ao.changed_from_last_update)
+        self.assertEqual(10, ao.previous_snapshot.filled)
+
+        resp = {"status": "open", "filled": 30, "cost": 0}
+
+        ao.update_from_exchange(resp)
+        self.assertTrue(ao.changed_from_last_update)
+        self.assertEqual(20, ao.previous_snapshot.filled)
+
+
+
+
+
+
 
 
 

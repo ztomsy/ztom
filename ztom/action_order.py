@@ -1,3 +1,5 @@
+from collections import namedtuple
+from typing import NamedTuple
 from ztom import core
 from ztom import errors
 from ztom import TradeOrder
@@ -6,19 +8,40 @@ import uuid
 import time
 
 
+class ActionOrderSnapshot(NamedTuple):
+    symbol: str = ""
+    amount: float = 0.0
+    price: float = 0.0
+    side: str = ""
+    status: str = ""
+    state: str = ""
+    filled: float = 0.0
+    active_trade_order_id: str = ""
+    active_trade_order_status: str = ""
+
+
 class ActionOrder(object):
+
+    # ActionOrderSnapshot = namedtuple("ActionOrderSnapshot", [
+    #     "symbol",
+    #     "amount",
+    #     "price",
+    #     "side",
+    #     "status",
+    #     "state",
+    #     "filled",
+    #     "active_trade_order_id"])
 
     def __eq__(self, other):
         fields_to_compare = list(["id", "status", "symbol", "start_currency", "dest_currency",
-                                 "status", "state", "filled_dest_amount", "filled_start_amount",
+                                  "status", "state", "filled_dest_amount", "filled_start_amount",
                                   "filled_price", "filled", "amount"])
         for f in fields_to_compare:
             if getattr(self, f) != getattr(other, f): return False
         return True
 
     def __init__(self, symbol, amount: float, price: float, side: str,
-                 cancel_threshold: float=0.000001, max_order_updates: int=10):
-
+                 cancel_threshold: float = 0.000001, max_order_updates: int = 10):
 
         if price is None or price <= 0:
             raise errors.OrderError("Wrong price {}".format(price))
@@ -49,19 +72,26 @@ class ActionOrder(object):
         self.order_command = None  # None, new, cancel
 
         self.active_trade_order = None
-        self.orders_history = list() # type: List[TradeOrder]
+        self.orders_history = list()  # type: List[TradeOrder]
 
         self.market_data = list()  # list of data received by via order commands
 
-        self._prev_filled_dest_amount = 0.0   # filled amounts on previous orders
+        self._prev_filled_dest_amount = 0.0  # filled amounts on previous orders
         self._prev_filled_start_amount = 0.0  # filled amountsbot, on previous orders
-        self._prev_filled = 0.0               # filled amounts on previous orders
+        self._prev_filled = 0.0  # filled amounts on previous orders
 
         # create initial trade order
-        self.active_trade_order = self._create_initial_trade_order() # type: TradeOrder
+        self.active_trade_order = self._create_initial_trade_order()  # type: TradeOrder
 
         # different tags for additional information
         self.tags = list()
+
+        self.changed_from_last_update = True
+        """
+        is changed from last update
+        """
+
+        self.previous_snapshot: ActionOrderSnapshot = ActionOrderSnapshot()
 
         self._force_close = False
         """
@@ -73,7 +103,7 @@ class ActionOrder(object):
 
     @classmethod
     def create_from_start_amount(cls, symbol, start_currency, amount_start, dest_currency, price,
-                                 cancel_threshold: float = 0.000001, max_order_updates: int=10):
+                                 cancel_threshold: float = 0.000001, max_order_updates: int = 10):
 
         side = core.get_order_type(start_currency, dest_currency, symbol)
 
@@ -147,6 +177,8 @@ class ActionOrder(object):
         :return: updates the self.order_command and returns it
 
         """
+        snapshot_before_update = self._snapshot()
+
         self.active_trade_order.update_order_from_exchange_resp(resp)
         self.market_data = market_data
 
@@ -158,6 +190,14 @@ class ActionOrder(object):
                 self.filled_dest_amount / self.filled_start_amount
 
         self.filled = self._prev_filled + self.active_trade_order.filled
+
+        snapshot_after_update = self._snapshot()
+
+        if snapshot_before_update != snapshot_after_update:
+            self.changed_from_last_update = True
+            self.previous_snapshot = snapshot_before_update
+        else:
+            self.changed_from_last_update = False
 
         if self.active_trade_order.status == "open":
 
@@ -179,7 +219,7 @@ class ActionOrder(object):
 
             next_command = self._on_closed_order(self.active_trade_order, market_data)
 
-            if next_command is not None :
+            if next_command is not None:
                 self.order_command = next_command
             return self.order_command
 
@@ -188,7 +228,7 @@ class ActionOrder(object):
 
             next_command = self._on_closed_order(self.active_trade_order, market_data)
 
-            if next_command is not None :
+            if next_command is not None:
                 self.order_command = next_command
             return self.order_command
 
@@ -211,7 +251,7 @@ class ActionOrder(object):
         pass
         return "hold"
 
-    def _on_closed_order(self, active_trade_order: TradeOrder, market_data = None):
+    def _on_closed_order(self, active_trade_order: TradeOrder, market_data=None):
         """
         This method is called when the active order was closed. Should return  the next order command
         for active_order which should execute the order manager. Optionally should close the active trade order and/or
@@ -303,3 +343,37 @@ class ActionOrder(object):
 
         else:
             raise errors.OrderError("Not all parameters for Order are set")
+
+    def __str_status__(self):
+        """
+        Returns string respresentation of essential order informatin, Used in order manager logging
+        """
+        s = "{start_currency} -{side}-> {dest_currency} filled {filled}/{amount}" \
+            .format(
+                    start_currency=self.start_currency,
+                    side=self.side,
+                    dest_currency=self.dest_currency,
+                    filled=self.active_trade_order.filled,
+                    amount=self.active_trade_order.amount)
+        return s
+
+    def __str__(self):
+        s = "ActionOrder " + self.__str_status__()
+        return s
+
+    def _snapshot(self):
+        """
+        returns snapshot of current ActionOrder
+        """
+        return ActionOrderSnapshot(
+            self.symbol,
+            self.amount,
+            self.price,
+            self.side,
+            self.status,
+            self.state,
+            self.filled,
+            getattr(getattr(self, "active_trade_order", {"id": None}), "id", None),
+            getattr(getattr(self, "active_trade_order", {"status": None}), "status", None)
+        )
+
