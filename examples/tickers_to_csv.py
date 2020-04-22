@@ -4,8 +4,8 @@ import json
 import datetime
 
 """
-This will save markets data and tickers and to tickers.csv and markets.json in current folder. These files could be 
-used as an offline data sources for ztom. 
+This will save markets data and tickers and to tickers.csv and markets.json in 
+current folder. These files could be used as an offline data sources for ztom. 
 
 """
 

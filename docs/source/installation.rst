@@ -1,14 +1,13 @@
 Installation
 ============
 
-(the installation from pypi will be implemented soon)
-
-**Requirements:**  python3.6+ and some libs
+**Requirements:**  python3.6+
 
 1. Clone the repo:
       .. code-block::
 
         git clone https://github.com/ztomsy/ztom.git
+
 2. Install the dependencies:
     .. code-block::
 
@@ -19,7 +18,7 @@ Installation
 
        pip3 install -e .
 
-4. Run some tests:
+4. Run the tests:
     .. code-block::
 
        python3 -m unittest -v -b
