@@ -146,17 +146,17 @@ def convert_currency(start_currency:str, start_amount:float, dest_currency: str 
 
     if symbol is None:
         if ticker is None:
-            raise (Exception("No symbol or ticker provided"))
+            return None
         if "symbol" in ticker:
             symbol = ticker["symbol"]
         else:
-            raise (errors.TickerError("No Symbol in Ticker"))
+            return None
 
     if side is None:
         side = get_trade_direction_to_currency(symbol, dest_currency)
 
         if not side:
-            raise (errors.TickerError("Symbol not contains both currencies"))
+            return None
 
     if price is None:
 
@@ -168,10 +168,10 @@ def convert_currency(start_currency:str, start_amount:float, dest_currency: str 
                 (not taker and side == "buy"):
             price = float(ticker["bid"])
         else:
-            raise (Exception("Wrong side and taker/maker parameters"))
+            return None
 
     if price == 0:
-        raise (Exception("Zero price"))
+        return None
 
     dest_amount = 0.0
 

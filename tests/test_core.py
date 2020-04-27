@@ -117,28 +117,20 @@ class CoreFuncTestSuite(unittest.TestCase):
         self.assertEqual(dest_amount, 1/70)
 
         # no ticker or symbol provided
-        with self.assertRaises(Exception) as cntx:
-            core.convert_currency("RUB", 1, "USD")
-        self.assertEqual(Exception, type(cntx.exception))
-        self.assertEqual('No symbol or ticker provided', cntx.exception.args[0])
+        res = core.convert_currency("RUB", 1, "USD")
+        self.assertIsNone(res)
 
         # no symbol in ticker
-        with self.assertRaises(Exception) as cntx:
-            core.convert_currency("RUB", 1, "USD", ticker={})
-        self.assertEqual(errors.TickerError, type(cntx.exception))
-        self.assertEqual('No Symbol in Ticker', cntx.exception.args[0])
+        res= core.convert_currency("RUB", 1, "USD", ticker={})
+        self.assertIsNone(res)
 
         # symbol not contains both currencies
-        with self.assertRaises(errors.TickerError) as cntx:
-            core.convert_currency("RUB", 1, "USD", symbol="RUB/GBP")
-        self.assertEqual(errors.TickerError, type(cntx.exception))
-        self.assertEqual('Symbol not contains both currencies', cntx.exception.args[0])
+        res = core.convert_currency("RUB", 1, "USD", symbol="RUB/GBP")
+        self.assertIsNone(res)
 
         # zero price
-        with self.assertRaises(Exception) as cntx:
-            core.convert_currency("RUB", 1, "USD", symbol="RUB/USD", price=0)
-        self.assertEqual(Exception, type(cntx.exception))
-        self.assertEqual('Zero price', cntx.exception.args[0])
+        res = core.convert_currency("RUB", 1, "USD", symbol="RUB/USD", price=0)
+        self.assertIsNone(res)
 
     def test_price_convert_dest_amount(self):
 
