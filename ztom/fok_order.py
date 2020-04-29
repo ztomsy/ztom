@@ -49,8 +49,8 @@ class FokOrder(ActionOrder):
                 return "hold"
 
         if active_trade_order.update_requests_count >= self.max_order_updates \
-                and active_trade_order.amount - active_trade_order.filled > self.cancel_threshold \
-                and (active_trade_order.filled > self.cancel_threshold or active_trade_order.filled == 0):
+                and active_trade_order.amount - active_trade_order.filled > self.cancel_threshold:
+                # and (active_trade_order.filled > self.cancel_threshold or active_trade_order.filled == 0):
             return "cancel"
         return "hold"
 
