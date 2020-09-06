@@ -39,7 +39,8 @@ class FokThresholdOrderTestSuite(unittest.TestCase):
     def test_fok_threshold_flow(self):
         fto = FokThresholdTakerPriceOrder.create_from_start_amount("ADA/ETH", "ADA", 1000, "ETH", 0.00032485131,
                                                                    taker_price_threshold=-0.05,
-                                                                   threshold_check_after_updates=5)
+                                                                   threshold_check_after_updates=5,
+                                                                   cancel_threshold=0)
         # order update 1
         resp = {"status": "open"}
         order_command = fto.update_from_exchange(resp)

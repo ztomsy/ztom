@@ -39,14 +39,20 @@ class FokOrder(ActionOrder):
         self.time_from_create = now - active_trade_order.timestamp_open.get("request_received", now)
 
         if self.time_to_cancel > 0.0:
-            if self.time_from_create >= self.time_to_cancel:
+
+            if self.time_from_create >= self.time_to_cancel \
+                    and (active_trade_order.amount - active_trade_order.filled >= self.cancel_threshold
+                         or active_trade_order.amount <= self.cancel_threshold) \
+                    and (active_trade_order.filled > self.cancel_threshold or active_trade_order.filled == 0):
                 self.tags.append("#timeout")
                 return "cancel"
             else:
                 return "hold"
 
         if active_trade_order.update_requests_count >= self.max_order_updates \
-                and active_trade_order.amount - active_trade_order.filled > self.cancel_threshold:
+                and (active_trade_order.amount - active_trade_order.filled >= self.cancel_threshold
+                     or active_trade_order.amount <= self.cancel_threshold) \
+                and (active_trade_order.filled > self.cancel_threshold or active_trade_order.filled == 0):
             return "cancel"
         return "hold"
 
@@ -165,7 +171,10 @@ class FokThresholdTakerPriceOrder(FokOrder):
                     price_diff = core.relative_target_price_difference(self.side, active_trade_order.price,
                                                                        current_taker_price)
 
-                    if price_diff is not None and price_diff <= self.taker_price_threshold:
+                    if price_diff is not None and price_diff <= self.taker_price_threshold \
+                            and active_trade_order.amount - active_trade_order.filled > self.cancel_threshold \
+                            and (active_trade_order.filled > self.cancel_threshold or active_trade_order.filled ==0):
+
                         order_command = "cancel"
 
                         if "#below_threshold" not in self.tags:

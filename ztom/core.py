@@ -146,17 +146,17 @@ def convert_currency(start_currency:str, start_amount:float, dest_currency: str 
 
     if symbol is None:
         if ticker is None:
-            raise (Exception("No symbol or ticker provided"))
+            return None
         if "symbol" in ticker:
             symbol = ticker["symbol"]
         else:
-            raise (errors.TickerError("No Symbol in Ticker"))
+            return None
 
     if side is None:
         side = get_trade_direction_to_currency(symbol, dest_currency)
 
         if not side:
-            raise (errors.TickerError("Symbol not contains both currencies"))
+            return None
 
     if price is None:
 
@@ -168,10 +168,10 @@ def convert_currency(start_currency:str, start_amount:float, dest_currency: str 
                 (not taker and side == "buy"):
             price = float(ticker["bid"])
         else:
-            raise (Exception("Wrong side and taker/maker parameters"))
+            return None
 
     if price == 0:
-        raise (Exception("Zero price"))
+        return None
 
     dest_amount = 0.0
 
@@ -204,3 +204,32 @@ def ticker_price_for_dest_amount(side: str, start_amount: float, dest_amount: fl
         return dest_amount / start_amount
 
     return False
+
+
+def base_amount_for_target_currency(currency, amount, symbol, price: float=None, ticker:dict=None):
+    """
+    Returns amount in base currency in symbol for provided currency, amount and price.
+    Price could be set directly or taken as taker from ticker symbol dict.
+
+    Returns: amount for base currency or 0 if prices are not provided
+
+    """
+
+    side = get_trade_direction_to_currency(symbol, dest_currency=currency)
+
+    if currency == symbol.split("/")[0]:
+        return amount
+
+    else:
+
+        ticker_price = 0.0
+
+        if price is None and ticker_price is not None:
+            ticker_price = ticker.get("bid", 0.0)
+        elif price is not None:
+            ticker_price = price
+
+        if ticker_price == 0.0:
+            return 0
+
+        return amount / ticker_price

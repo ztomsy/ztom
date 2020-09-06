@@ -117,28 +117,20 @@ class CoreFuncTestSuite(unittest.TestCase):
         self.assertEqual(dest_amount, 1/70)
 
         # no ticker or symbol provided
-        with self.assertRaises(Exception) as cntx:
-            core.convert_currency("RUB", 1, "USD")
-        self.assertEqual(Exception, type(cntx.exception))
-        self.assertEqual('No symbol or ticker provided', cntx.exception.args[0])
+        res = core.convert_currency("RUB", 1, "USD")
+        self.assertIsNone(res)
 
         # no symbol in ticker
-        with self.assertRaises(Exception) as cntx:
-            core.convert_currency("RUB", 1, "USD", ticker={})
-        self.assertEqual(errors.TickerError, type(cntx.exception))
-        self.assertEqual('No Symbol in Ticker', cntx.exception.args[0])
+        res= core.convert_currency("RUB", 1, "USD", ticker={})
+        self.assertIsNone(res)
 
         # symbol not contains both currencies
-        with self.assertRaises(errors.TickerError) as cntx:
-            core.convert_currency("RUB", 1, "USD", symbol="RUB/GBP")
-        self.assertEqual(errors.TickerError, type(cntx.exception))
-        self.assertEqual('Symbol not contains both currencies', cntx.exception.args[0])
+        res = core.convert_currency("RUB", 1, "USD", symbol="RUB/GBP")
+        self.assertIsNone(res)
 
         # zero price
-        with self.assertRaises(Exception) as cntx:
-            core.convert_currency("RUB", 1, "USD", symbol="RUB/USD", price=0)
-        self.assertEqual(Exception, type(cntx.exception))
-        self.assertEqual('Zero price', cntx.exception.args[0])
+        res = core.convert_currency("RUB", 1, "USD", symbol="RUB/USD", price=0)
+        self.assertIsNone(res)
 
     def test_price_convert_dest_amount(self):
 
@@ -148,8 +140,34 @@ class CoreFuncTestSuite(unittest.TestCase):
         price = core.ticker_price_for_dest_amount("buy", 1, 70)
         self.assertAlmostEqual(price, 1/70, 8)
 
+    def test_order_amount_for_target_currency(self):
 
+        symbol = "USD/RUB"
+        price = 50
 
+        ticker = {"USD/RUB": {
+            "ask": 1000,
+            "bid": 100
+        }}
+
+        base_amount = core.base_amount_for_target_currency("RUB", 100, symbol, price)
+        self.assertEqual(2, base_amount)
+
+        base_amount = core.base_amount_for_target_currency("USD", 100, symbol, price)
+        self.assertEqual(100, base_amount)
+
+        base_amount = core.base_amount_for_target_currency("USD", 100, symbol, ticker=ticker[symbol])
+        self.assertEqual(100, base_amount)
+
+        base_amount = core.base_amount_for_target_currency("RUB", 100, symbol, ticker=ticker[symbol])
+        self.assertEqual(1, base_amount)
+
+        # error - bid should be set
+        ticker_ask = {"EUR/USD":
+                          {"ask": 2}}
+
+        base_amount = core.base_amount_for_target_currency("USD", 100, "EUR/USD", ticker=ticker_ask["EUR/USD"])
+        self.assertEqual(0, base_amount)
 
 
 if __name__ == '__main__':
