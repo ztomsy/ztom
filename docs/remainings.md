@@ -39,36 +39,72 @@ To deal with remainings ZTOM will provide following capabilities:
 Workflow
 -------- 
 0. ActionOrder have been closed with some remaining amount
-1. Add remaining to remainings balance DB tracking
-2. Log event of remaining added
-3. Wait until amount of some remaining asset will be enough for creating order to convert remaining into target currency
-4. Place an ActionOrder to trade particular remained currency into and target currency 
-5. Log event of trading result 
-6. Update remainings balance on filled amount of ActionOrder 
-7. Create Deal record in accordance of trading result
+1. Add remaining to remainings balance tracking db
+2. Wait until amount of some remaining asset will be enough for creating order to convert remaining into target currency
+3. Place an ActionOrder to trade particular remained currency into and target currency 
+4. Add remainings deduction to db on filled amount of ActionOrder 
+5. Create Deal record in accordance of trading result
 
 Data structures
 ---------------
 Following data structures are involved during remainings management. 
 
-1. Remainings balance for tracking total accumulated amounts of remainings to proceed with 
-2. Remainings events to track separate adding and filling remainings (within the common events reporting capabilities)
-3. Deal record when some of the remainings were filled.  
+1. Remainings balance change for tracking all remainings changes  
+2. Deal record when some of the remainings were filled.  
+3. (optional) Remainings events to track separate adding and filling remainings (within the common events reporting capabilities)
 
-## Remainings balance table (remainings_balance)
+## Remainings balance change table (remainings_balance)
  
 - remainings_balance_id  
 - exchange_id
 - account_id
+- timestamp
+- action: add, fill (deduct) remainings or aggregate records to optimize table
 - currency: currency of remainings
 - symbol: trade pair of an order yielded the remaining when remaining was created
-- amount: total of remainings of currency 
+- amount_delta: change of amount of currency. could be positive or negative 
 - target_currency: asset which was intended to be yielded from remaining proceeding 
-- target_amount: considered target amount
-- last_add_timestamp: timestamp of recent adding of remaining for currency->target 
-- last_fill_timestamp: timestamp of recent deducting  of remaining for currency->target
+- target_amount_delta: considered target amount delta
 
-## Remainings events
+## Deal report of remaining conversion result
+
+Essential Content of deal report: 
+- deal_type: "REMAININGS_CONVERT"
+- deal_uuid: new deal_uuid
+- status: "FILLED", "ERROR" 
+- currency: target currency of remaining conversoin
+- start_amount: 0 
+- result_amount: filled target currency amount
+- gross_profit: filled target currency amount
+
+TODO: add sample generating Deal Report from ActionOrder
+```python
+import datetime, pytz
+from ztom import ActionOrder, Bot, DealReport
+
+
+bot = Bot(...)
+order = ActionOrder(...)
+            
+deal_report = DealReport(
+                timestamp=datetime.now(tz=pytz.timezone("UTC")),
+                timestamp_start=datetime.fromtimestamp(order.timestamp, tz=pytz.timezone("UTC")),
+                exchange=bot.exchange.exchange_id,
+                instance=bot.server_id,
+                server=bot.server_id,
+                deal_type="REMAININGS_CONVERT",
+                deal_uuid="134134-1341234-1341341-2341",
+                status="FILLED",
+                currency=order.dest_currency,
+                start_amount=0.0,
+                result_amount=order.filled_dest_amount,
+                gross_profit=order.filled_dest_amount,
+                net_profit=0.0,
+                config=bot.config,
+                deal_data={})
+``` 
+ 
+## Remainings events (optional)
 
 For tracking adding and filling remainings following date should be tracked or reported.
 
@@ -126,45 +162,5 @@ the dynamics of adding remainings.
      }
   } 
   ``` 
-
-## Deal report of remaining conversion result
-
-Essential Content of deal report: 
-- deal_type: "REMAININGS_CONVERT"
-- deal_uuid: new deal_uuid
-- status: "FILLED", "ERROR" 
-- currency: target currency of remaining conversoin
-- start_amount: 0 
-- result_amount: filled target currency amount
-- gross_profit: filled target currency amount
-
-TODO: add sample generating Deal Report from ActionOrder
-```python
-import datetime, pytz
-from ztom import ActionOrder, Bot, DealReport
-
-
-bot = Bot(...)
-order = ActionOrder(...)
-            
-deal_report = DealReport(
-                timestamp=datetime.now(tz=pytz.timezone("UTC")),
-                timestamp_start=datetime.fromtimestamp(order.timestamp, tz=pytz.timezone("UTC")),
-                exchange=bot.exchange.exchange_id,
-                instance=bot.server_id,
-                server=bot.server_id,
-                deal_type="REMAININGS_CONVERT",
-                deal_uuid="134134-1341234-1341341-2341",
-                status="FILLED",
-                currency=order.dest_currency,
-                start_amount=0.0,
-                result_amount=order.filled_dest_amount,
-                gross_profit=order.filled_dest_amount,
-                net_profit=0.0,
-                config=bot.config,
-                deal_data={})
-``` 
- 
-
 
 
