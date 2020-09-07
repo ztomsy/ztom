@@ -27,7 +27,7 @@ from ztom.fok_order import FokOrder, FokThresholdTakerPriceOrder
 from ztom.order_manager import *
 from ztom.throttle import Throttle
 from ztom import *
-
+from ztom.models.remainings import Remainings
 
 # Legacy support
 from ztom.owa_manager import OwaManager
