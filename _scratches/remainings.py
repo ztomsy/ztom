@@ -19,8 +19,11 @@ remainings = Remainings(
     exchange="binance",
     account="test",
     currency="BTC",
+    action='FILL',
     symbol="BTC/USDT",
-    target_currency="USDT"
+    target_currency="USDT",
+    amount_delta=-0.5,
+    target_amount_delta=5000
 
 )
 
