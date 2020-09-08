@@ -27,8 +27,8 @@ remainings = Remainings(
 
 )
 
-
 reporter.session.add(remainings)
+print(remainings)
 
 try:
     reporter.session.commit()
