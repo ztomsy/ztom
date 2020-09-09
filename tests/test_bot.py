@@ -37,7 +37,7 @@ class BasicTestSuite(unittest.TestCase):
         self.assertEqual(bot.api_key["apiKey"], "testApiKey")
         self.assertEqual(bot.server_id, "CORE2")
 
-    def test_load_config_file_file(self):
+    def test_load_config_from_file(self):
         bot = ztom.Bot("_config_default.yml", self.default_log)
         bot.load_config_from_file(bot.config_filename)
 
