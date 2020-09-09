@@ -1,5 +1,5 @@
 ---
-server_id: CORE1
+server_id: CORE2
 script_id: core_test
 exchange_id: binance
 test_balance: 1

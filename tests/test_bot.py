@@ -19,7 +19,7 @@ class BasicTestSuite(unittest.TestCase):
         self.bot = ztom.Bot(self.default_config, self.default_log)
 
     def test_create_bot(self):
-        self.bot.load_config_from_file(self.default_config)
+        self.bot.load_config_from_json(self.default_config)
 
         self.assertEqual(self.bot.api_key["apiKey"], "testApiKey")
         self.assertEqual(self.bot.server_id, "CORE1")
@@ -32,13 +32,29 @@ class BasicTestSuite(unittest.TestCase):
 
     def test_load_config_from_yml(self):
         bot = ztom.Bot("_config_default.yml", self.default_log)
-        bot.load_config_from_file(self.default_config)
+        bot.load_config_from_yml(bot.config_filename)
+
+        self.assertEqual(bot.api_key["apiKey"], "testApiKey")
+        self.assertEqual(bot.server_id, "CORE2")
+
+    def test_load_config_file_file(self):
+        bot = ztom.Bot("_config_default.yml", self.default_log)
+        bot.load_config_from_file(bot.config_filename)
+
+        self.assertEqual(bot.api_key["apiKey"], "testApiKey")
+        self.assertEqual(bot.server_id, "CORE2")
+
+        bot = ztom.Bot("_config_default.json", self.default_log)
+        bot.load_config_from_file(bot.config_filename)
 
         self.assertEqual(bot.api_key["apiKey"], "testApiKey")
         self.assertEqual(bot.server_id, "CORE1")
 
+        with self.assertRaises(Exception) as context:
+            bot = ztom.Bot("_config_default.txt", self.default_log)
+            bot.load_config_from_file(bot.config_filename)
 
-
+        self.assertTrue("Wrong config file extension. Should be json or yml." in context.exception.args)
 
     def test_cli_overrides_config_file(self):
         self.bot.debug = True

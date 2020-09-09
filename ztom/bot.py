@@ -13,6 +13,7 @@ from .trade_order_manager import *
 from .trade_orders import *
 from .reporter_sqla import SqlaReporter
 import yaml
+import os
 
 class Bot:
 
@@ -103,8 +104,21 @@ class Bot:
         self.last_proceed_report = dict()
 
         # load config from json
-
     def load_config_from_file(self, config_file):
+
+        filename, file_extension = os.path.splitext(config_file)
+        if file_extension == ".json":
+            self.load_config_from_json(config_file)
+            return
+
+        elif file_extension == ".yml":
+            self.load_config_from_yml(config_file)
+            return
+        else:
+            raise Exception("Wrong config file extension. Should be json or yml.")
+
+
+    def load_config_from_json(self, config_file):
 
         with open(config_file) as json_data_file:
             cnf = json.load(json_data_file)
@@ -115,7 +129,7 @@ class Bot:
                 setattr(self, i, attr_val)
 
     def load_config_from_yml(self, yml_file):
-        with open('items.yaml') as f:
+        with open(yml_file) as f:
             cnf = yaml.load(f, Loader=yaml.FullLoader)
 
             for i in cnf:
