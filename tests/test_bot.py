@@ -30,6 +30,16 @@ class BasicTestSuite(unittest.TestCase):
 
         # todo: test for checking if log file created
 
+    def test_load_config_from_yml(self):
+        bot = ztom.Bot("_config_default.yml", self.default_log)
+        bot.load_config_from_file(self.default_config)
+
+        self.assertEqual(bot.api_key["apiKey"], "testApiKey")
+        self.assertEqual(bot.server_id, "CORE1")
+
+
+
+
     def test_cli_overrides_config_file(self):
         self.bot.debug = True
 

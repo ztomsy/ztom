@@ -12,6 +12,7 @@ from .reporter import Reporter, MongoReporter
 from .trade_order_manager import *
 from .trade_orders import *
 from .reporter_sqla import SqlaReporter
+import yaml
 
 class Bot:
 
@@ -112,6 +113,15 @@ class Bot:
             attr_val = cnf[i]
             if not bool(getattr(self, i)) and attr_val is not None:
                 setattr(self, i, attr_val)
+
+    def load_config_from_yml(self, yml_file):
+        with open('items.yaml') as f:
+            cnf = yaml.load(f, Loader=yaml.FullLoader)
+
+            for i in cnf:
+                attr_val = cnf[i]
+                if not bool(getattr(self, i)) and attr_val is not None:
+                    setattr(self, i, attr_val)
 
     def get_cli_parameters(self, args):
         return get_cli_parameters(args)

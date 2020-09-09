@@ -9,3 +9,4 @@ aiohttp
 numpy
 sqlalchemy
 psycopg2-binary
+pyyaml
