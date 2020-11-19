@@ -216,7 +216,7 @@ class ActionOrderManager(object):
         #     return utils.dict_value_from_path(ticker, request_params_split)
         return ticker
 
-    def get_open_orders(self):
+    def get_open_orders(self) -> List[ActionOrder]:
         return list(filter(lambda x: x.status != "closed", self.orders))
 
     def have_open_orders(self):
@@ -397,27 +397,27 @@ class ActionOrderManager(object):
 
             self._prev_orders_status[order.id] = copy.copy(order)
 
-            if order.changed_from_last_update:
-                # ActionOrder general status log
-                self.log(self.LOG_INFO, "Order {action_order_id} STATUS {action_order_str_status}"
-                         .format(action_order_id=order.id,
-                                 action_order_str_status=order.__str_status__()))
+            # if order.changed_from_last_update:
+            #     # ActionOrder general status log
+            #     self.log(self.LOG_INFO, "ActionOrder {action_order_id} UPDATED"
+            #              .format(action_order_id=order.id,
+            #                      action_order_str_status=order.__str_status__()))
 
             order_action = self._order_action(order.order_command)
             data_requests = self._data_requests(order.order_command)
 
             if order_action == "new":
-                self.log(self.LOG_INFO, "Order {} creating new trade order for {} -{}-> {} amount {} price {}".format(
+                self.log(self.LOG_INFO, "ActionOrder {} creating new trade order for {} -{}-> {} amount {} price {}".format(
                     order.id, order.start_currency, order.side, order.dest_currency, order.get_active_order().amount,
                     order.get_active_order().price))
 
                 if order.get_active_order().status != "open":
                     resp = self._create_order(order.get_active_order())
 
-                    # if could not create Trade Order - than close the whole RecoveryOrder and report
+                    # if could not create Trade Order - than close the whole ActionOrder and report
                     if resp is None or ("id" not in resp):
-                        self.log(self.LOG_ERROR, "Order {} could not create new trade order".format(order.id))
-                        self.log(self.LOG_ERROR, "Order {} to be closed".format(order.id))
+                        self.log(self.LOG_ERROR, "ActionOrder {} could not create new trade order".format(order.id))
+                        self.log(self.LOG_ERROR, "ActionOrder {} to be closed".format(order.id))
                         order.close_order()
                     else:
 
@@ -425,7 +425,7 @@ class ActionOrderManager(object):
                         self._update_order_from_exchange(order, resp, market_data)
 
                         self.log(self.LOG_INFO,
-                                 "Order {} CREATED new trade order for {} -{}-> {} amount {} price {}".format(
+                                 "ActionOrder {} CREATED new trade order for {} -{}-> {} amount {} price {}".format(
                                      order.id, order.start_currency, order.side, order.dest_currency,
                                      resp["amount"],
                                      resp["price"]))
@@ -441,11 +441,11 @@ class ActionOrderManager(object):
                 resp = self._update_order(order.get_active_order())
 
                 if resp is None:
-                    self.log(self.LOG_INFO, "skipping order")
+                    self.log(self.LOG_INFO, "ActionOrder: skipping update because of empty resp from exchange")
                     continue
 
                 if "status" in resp and resp["status"] == "closed" or resp["status"] == "canceled":
-                    self.log(self.LOG_INFO, "Order {} trade order have been closed with status {}  {} -{}-> {}".format(
+                    self.log(self.LOG_INFO, "ActionOrder {} TradeOrder have been closed with status {}  {} -{}-> {}".format(
                         order.id, resp["status"], order.start_currency, order.side, order.dest_currency))
 
                     if self.request_trades:
@@ -474,15 +474,16 @@ class ActionOrderManager(object):
 
                 if order.get_active_order() is not None:
                     if order.changed_from_last_update:
+                        self.log(self.LOG_INFO, str(order.get_active_order()))
                         self.log(self.LOG_INFO, str(order))
                 else:
                     o = order.orders_history[-1]
-                    self.log(self.LOG_INFO, "Order {} trade order closed {} with status {} filled {}/{}".format(
+                    self.log(self.LOG_INFO, "ActionOrder {} TradeOrder closed {} with status {} filled {}/{}".format(
                         order.id, o.update_requests_count, o.status, o.filled,
                         o.amount))
 
             elif order_action == "cancel":
-                self.log(self.LOG_INFO, "Order {} Proceed to cancelling trade order# {} {} {} -{}-> {} ".format(
+                self.log(self.LOG_INFO, "ActionOrder {} Proceed to cancelling trade order# {} {} {} -{}-> {} ".format(
                     order.id, order.get_active_order().id, order.get_active_order().symbol, order.start_currency,
                     order.side, order.dest_currency))
 
@@ -521,7 +522,7 @@ class ActionOrderManager(object):
                     resp["status"] = "canceled"  # override exchange response
                     # self._update_order_from_exchange(order, resp, {"price": price})
                     o = order.get_active_order()
-                    self.log(self.LOG_INFO, "Order {} trade order closed {} with status {} filled {}/{}".format(
+                    self.log(self.LOG_INFO, "ActionOrder {} trade order closed {} with status {} filled {}/{}".format(
                         order.id, o.update_requests_count,  o.status, o.filled,
                         o.amount))
 
@@ -536,7 +537,7 @@ class ActionOrderManager(object):
 
             if order.status != "open":
 
-                self.log(self.LOG_INFO, "Order {} Status: {}. State {}. Total filled {}/{}".format(order.id,
+                self.log(self.LOG_INFO, "ActionOrder {} Status: {}. State {}. Total filled {}/{}".format(order.id,
                                                                                                    order.status,
                                                                                                    order.state,
                                                                                                    order.filled,

@@ -8,13 +8,13 @@ from sqlalchemy.orm import sessionmaker
 from .models._sqla_base import Base
 from .models.deal import DealReport
 from .models.trade_order import TradeOrderReport
-
+from .models.remainings import Remainings
 
 class SqlaReporter(Reporter):
     """
     reporter wrapper for SQLAlchemy
     """
-    TABLES = [DealReport, TradeOrderReport]
+    TABLES = [DealReport, TradeOrderReport, Remainings]
 
     def __init__(self, server_id, exchange_id):
         super().__init__(server_id, exchange_id)

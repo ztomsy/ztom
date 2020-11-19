@@ -1,0 +1,26 @@
+---
+server_id: CORE2
+script_id: core_test
+exchange_id: binance
+test_balance: 1
+commission: 0.0005
+api_key:
+  apiKey: testApiKey
+  secret: testApiSecret
+lap_time: 60
+max_requests_per_lap: 850
+influxdb:
+  host: localserver
+  port: 8086
+  db: dev
+  measurement: status
+recovery_server:
+  host: localhost
+  port: 8080
+order_update_total_requests: 25
+order_update_requests_for_time_out: 5
+order_update_time_out: 1
+max_trades_updates: 20
+max_oder_books_fetch_attempts: 10
+request_sleep: 0.1
+om_proceed_sleep: 0.1

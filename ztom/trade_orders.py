@@ -103,6 +103,17 @@ class TradeOrder(object):
                 self.amount_start = price * self.amount
                 self.amount_dest = amount
 
+    def __str__(self):
+        s = "TradeOrder {id}. {start_currency} -{side}-> {dest_currency} filled {filled}/{amount}" \
+            .format(
+                    id=self.id,
+                    start_currency=self.start_currency,
+                    side=self.side,
+                    dest_currency=self.dest_currency,
+                    filled=self.filled,
+                    amount=self.amount)
+        return s
+
     @classmethod
     def create_limit_order_from_start_amount(cls, symbol, start_currency, amount_start, dest_currency, price) -> 'TradeOrder':
 

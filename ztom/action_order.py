@@ -353,8 +353,8 @@ class ActionOrder(object):
                     start_currency=self.start_currency,
                     side=self.side,
                     dest_currency=self.dest_currency,
-                    filled=self.active_trade_order.filled,
-                    amount=self.active_trade_order.amount)
+                    filled=self.filled,
+                    amount=self.amount)
         return s
 
     def __str__(self):
