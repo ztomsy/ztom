@@ -698,11 +698,11 @@ class ExchageWrapperTestSuite(unittest.TestCase):
         # self.assertAlmostEqual(ew.requests_throttle.requests_current_period[0]["timestamp"], markets_timestamp, 2)
 
         time_diff = ew.requests_throttle.requests_current_period[0]["timestamp"] - markets_timestamp
-        self.assertAlmostEqual(0.1, time_diff, 2)
+        self.assertAlmostEqual(0.1, time_diff, 1)
         time.sleep(0.1)
 
         sleep = ew.requests_throttle.sleep_time()
-        self.assertAlmostEqual(0.6 - 0.1, sleep, 2)
+        self.assertAlmostEqual(0.6 - 0.1, sleep, 1)
 
     def test_throttle_all_request_types(self):
         ew = ztom.ccxtExchangeWrapper("binance")

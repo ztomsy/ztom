@@ -19,8 +19,8 @@ class TimerTestSuite(unittest.TestCase):
 
         timestamps = zt_timer.timestamps("timestamp_")
 
-        self.assertAlmostEqual(timestamp_start+0.1, timestamps["timestamp_notch1"], 2)
-        self.assertAlmostEqual(timestamp_start + 0.1 + 0.3, timestamps["timestamp_notch2"], 2)
+        self.assertAlmostEqual(timestamp_start+0.1, timestamps["timestamp_notch1"], 1)
+        self.assertAlmostEqual(timestamp_start + 0.1 + 0.3, timestamps["timestamp_notch2"], 1)
 
 
 if __name__ == '__main__':
