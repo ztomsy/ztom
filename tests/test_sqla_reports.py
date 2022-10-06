@@ -14,33 +14,6 @@ import unittest
 
 class SqlaReporterTestSuite(unittest.TestCase):
 
-    def test_trade_order_report_match_trade_order(self):
-        """
-        test to match all the necessary fields are presented at TradeOrder and TradeOrderReport
-        """
-
-        order = TradeOrder("limit", "ETH/BTC", 1, "buy")
-
-        order_dict = dict((key, value) for key, value in order.__dict__.items()
-                          if not callable(value) and not key.startswith('__'))
-
-        order_report = TradeOrderReport.from_trade_order(order, datetime.datetime.now(tz=pytz.timezone("UTC")))
-
-        # lets find fields which are not present in both dicts from TradeOrder and TradeOrderReport
-        diff = {k: order_report.__table__.c._data[k] for k in set(order_report.__table__.c._data) - set(order_dict)}
-        diff.update({k: order_dict[k] for k in set(order_dict) - set(order_report.__table__.c._data)})
-
-        # !!!!
-        # update this if new fields will be added
-        diff_keys = (["datetime", 'order_book',
-                      'action_order_uuid', 'id_from_exchange',
-                      'deal_uuid',  "lastTradeTimestamp"])
-
-        for k in diff.keys():
-            self.assertIn(k, diff_keys)
-
-        self.assertEqual(len(diff_keys), len(diff))
-
     def test_trade_order_report_from_trade_order_after_fill(self):
 
         order = ActionOrder.create_from_start_amount("ETH/BTC","BTC", 1, "ETH", 0.01)
