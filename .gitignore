@@ -1,4 +1,5 @@
 # Some ignored stuff
+.vscode/
 .idea/
 
 # Byte-compiled / optimized / DLL files
