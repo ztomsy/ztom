@@ -1,7 +1,15 @@
+import os
+from dotenv import load_dotenv
 import ztom
+
+load_dotenv()
+
+api_key = os.getenv("ZTOM_API_KEY")
+secret = os.getenv("ZTOM_SECRET")
+
 ew = ztom.ccxtExchangeWrapper("binance",
-                            api_key="J9L7pjFOnVJUpNrMVCxZaT8gSomtkBpll6MESONxxnapnR7V7qXfmru6WLheP5MB",
-                            secret = "vciAExtP7LTQoAUE6LCtF4MFLVzhW8GOrAH0GTetC9Axttm3Mcdkmkm6MV2E5yFE")
+                            api_key=api_key,
+                            secret = secret)
 
 balance = ew.fetch_balance()
 
