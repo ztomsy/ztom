@@ -570,7 +570,7 @@ class ccxtExchangeWrapper:
         return self._ccxt.create_order(symbol, order_type, side, amount, price)
 
     def _fetch_order(self, order: TradeOrder):
-        return self._ccxt.fetch_order(order.id)
+        return self._ccxt.fetch_order(order.id, symbol=order.symbol)
 
     def _cancel_order(self, order: TradeOrder):
         return self._ccxt.cancel_order(order.id)
